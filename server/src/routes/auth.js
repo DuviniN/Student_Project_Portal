@@ -12,6 +12,7 @@ const {
   completeProfile,
   registerLocal,
   loginLocal,
+  refresh,
 } = require('../controllers/authController');
 
 const router = express.Router();
@@ -80,6 +81,7 @@ router.get('/google/callback', (req, res, next) => {
 }, handleGoogleCallback);
 
 // General endpoints
+router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.get('/me', authenticate, getMe);
 
