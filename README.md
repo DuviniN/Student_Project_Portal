@@ -104,8 +104,8 @@ cp client/.env.example client/.env
 4. Go to **Credentials → Create Credentials → OAuth 2.0 Client ID**
 5. Application type: **Web application**
 6. Add Authorised Redirect URIs:
-   - `http://localhost:5000/api/auth/google/callback` (development)
-   - `http://localhost:5000/api/auth/admin/google/callback` (admin)
+   - `http://localhost:5001/api/auth/google/callback` (development)
+   - `http://localhost:5001/api/auth/admin/google/callback` (admin)
 7. Copy Client ID and Secret into `server/.env`
 
 ### 4. Create the database
@@ -122,7 +122,7 @@ npm run db:setup
 ### 5. Run the development servers
 
 ```bash
-# Terminal 1 — Backend (port 5000)
+# Terminal 1 — Backend (port 5001)
 cd server
 npm run dev
 
