@@ -19,11 +19,15 @@ import StudentProfilePage from './pages/StudentProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
 import AdminAuthPage from './pages/AdminAuthPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminUserDetail from './pages/admin/AdminUserDetail';
+import AdminProjectEdit from './pages/admin/AdminProjectEdit';
+import AdminNotifications from './pages/admin/AdminNotifications';
 
-function Layout({ children, hideFooter }) {
+function Layout({ children, hideFooter, hideHeader }) {
   return (
     <>
-      <Navbar />
+      {!hideHeader && <Navbar />}
       <main className="flex-1">{children}</main>
       {!hideFooter && <Footer />}
     </>
@@ -73,10 +77,10 @@ export default function App() {
 
         {/* ── Auth routes (redirect to dashboard if already logged in) ─ */}
         <Route path="/auth/login" element={
-          <GuestRoute><Layout hideFooter><LoginPage /></Layout></GuestRoute>
+          <GuestRoute><Layout hideFooter hideHeader><LoginPage /></Layout></GuestRoute>
         } />
         <Route path="/auth/register" element={
-          <GuestRoute><Layout hideFooter><RegisterPage /></Layout></GuestRoute>
+          <GuestRoute><Layout hideFooter hideHeader><RegisterPage /></Layout></GuestRoute>
         } />
 
         {/* ── Admin auth (separate, hidden portal) ──*/}
@@ -92,27 +96,46 @@ export default function App() {
           }
         />
 
-        {/* ── Protected: unified dashboard (role-aware content inside) ── */}
+        {/* ── Protected: student dashboard ── */}
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute roles={['student', 'admin']}>
+            <ProtectedRoute roles={['student']}>
               <Layout><DashboardPage /></Layout>
             </ProtectedRoute>
           }
         />
 
         {/* Admin Dashboard */}
-        <Route
-          path="/admin/dashboard"
-          element={
+
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={
             <ProtectedRoute roles={['admin']}>
               <Layout><AdminDashboardPage /></Layout>
             </ProtectedRoute>
-          }
-        />
+          } />
+          <Route path="users" element={<Navigate to="/admin/dashboard?tab=users" replace />} />
+          <Route path="projects" element={<Navigate to="/admin/dashboard?tab=projects" replace />} />
+          <Route path="users/:id" element={
+            <ProtectedRoute roles={['admin']}>
+              <Layout><AdminUserDetail /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="projects/:id/edit" element={
+            <ProtectedRoute roles={['admin']}>
+              <Layout><AdminProjectEdit /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="notifications" element={
+            <ProtectedRoute roles={['admin']}>
+              <Layout><AdminNotifications /></Layout>
+            </ProtectedRoute>
+          } />
+        </Route>
 
-        {/* ── Protected: project management (students + admins) ────────── */}
+
+
+        {/* ── Protected: student project management ────────── */}
         <Route
           path="/projects/new"
           element={
@@ -124,7 +147,7 @@ export default function App() {
         <Route
           path="/projects/:id/edit"
           element={
-            <ProtectedRoute roles={['student', 'admin']}>
+            <ProtectedRoute roles={['student']}>
               <Layout><ProjectFormPage /></Layout>
             </ProtectedRoute>
           }
