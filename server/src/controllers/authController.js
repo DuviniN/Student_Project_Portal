@@ -41,6 +41,9 @@ const handleGoogleCallback = (req, res) => {
   }
 
   // Admin & Student: dashboard
+  if (user.role === 'admin') {
+    return res.redirect(`${process.env.CLIENT_URL}/admin/dashboard`);
+  }
   return res.redirect(`${process.env.CLIENT_URL}/dashboard`);
 };
 

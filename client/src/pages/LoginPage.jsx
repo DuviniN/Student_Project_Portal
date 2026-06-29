@@ -67,6 +67,8 @@ export default function LoginPage() {
       const currentUser = useAuthStore.getState().user;
       if (currentUser?.role === 'recruiter') {
         navigate('/projects', { replace: true });
+      } else if (currentUser?.role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
       }

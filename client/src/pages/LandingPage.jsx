@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { FiArrowRight, FiCode, FiUsers, FiBriefcase, FiStar, FiTrendingUp } from 'react-icons/fi';
 import api from '../services/api';
@@ -38,6 +38,14 @@ function CountUp({ target, suffix = '' }) {
 export default function LandingPage() {
   const { user } = useAuthStore();
   const [featuredProjects, setFeaturedProjects] = useState([]);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     api.get('/projects?limit=6').then((res) => setFeaturedProjects(res.data.projects)).catch(() => {});

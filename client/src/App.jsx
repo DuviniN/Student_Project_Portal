@@ -18,6 +18,7 @@ import DashboardPage from './pages/DashboardPage';
 import StudentProfilePage from './pages/StudentProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
 import AdminAuthPage from './pages/AdminAuthPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 
 function Layout({ children, hideFooter }) {
   return (
@@ -35,6 +36,7 @@ function GuestRoute({ children }) {
   if (loading) return null;
   if (user) {
     if (user.role === 'recruiter') return <Navigate to="/projects" replace />;
+    if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
     return <Navigate to="/dashboard" replace />;
   }
   return children;
@@ -100,12 +102,12 @@ export default function App() {
           }
         />
 
-        {/* Legacy admin dashboard alias */}
+        {/* Admin Dashboard */}
         <Route
           path="/admin/dashboard"
           element={
             <ProtectedRoute roles={['admin']}>
-              <Navigate to="/dashboard" replace />
+              <Layout><AdminDashboardPage /></Layout>
             </ProtectedRoute>
           }
         />
