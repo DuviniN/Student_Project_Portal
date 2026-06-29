@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const pool = require('../config/db');
-const { signToken, setTokenCookie, clearTokenCookie } = require('../utils/jwt');
+const { signToken, signRefreshToken, setTokenCookies, clearTokenCookies } = require('../utils/jwt');
 
 // ── Google OAuth callback (shared by all flows) ──────────────────────────────
 const handleGoogleCallback = (req, res) => {
@@ -28,7 +28,8 @@ const handleGoogleCallback = (req, res) => {
   }
 
   const token = signToken(user.id);
-  setTokenCookie(res, token);
+  const refreshToken = signRefreshToken(user.id);
+  setTokenCookies(res, token, refreshToken);
 
   // Students who haven't added their student ID yet
   if (user.role === 'student' && !user.student_id) {
@@ -87,7 +88,7 @@ const requireAdminFlowToken = (req, res, next) => {
 
 // ── Logout ───────────────────────────────────────────────────────────────────
 const logout = (req, res) => {
-  clearTokenCookie(res);
+  clearTokenCookies(res);
   res.json({ success: true, message: 'Logged out successfully.' });
 };
 
@@ -173,7 +174,8 @@ const registerLocal = async (req, res) => {
 
     const newUser = insertResult.rows[0];
     const token = signToken(newUser.id);
-    setTokenCookie(res, token);
+    const refreshToken = signRefreshToken(newUser.id);
+    setTokenCookies(res, token, refreshToken);
 
     res.status(201).json({
       success: true,
@@ -211,7 +213,8 @@ const loginLocal = async (req, res) => {
     }
 
     const token = signToken(user.id);
-    setTokenCookie(res, token);
+    const refreshToken = signRefreshToken(user.id);
+    setTokenCookies(res, token, refreshToken);
 
     res.json({
       success: true,
@@ -224,6 +227,37 @@ const loginLocal = async (req, res) => {
   }
 };
 
+// ── Refresh Token ─────────────────────────────────────────────────────────────
+const refresh = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({ success: false, message: 'No refresh token provided.' });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    if (!decoded.isRefreshToken) {
+      throw new Error('Invalid token type.');
+    }
+
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
+    if (!result.rows.length) {
+      return res.status(401).json({ success: false, message: 'User not found.' });
+    }
+
+    const user = result.rows[0];
+    const newToken = signToken(user.id);
+    const newRefreshToken = signRefreshToken(user.id);
+    
+    setTokenCookies(res, newToken, newRefreshToken);
+
+    res.json({ success: true, message: 'Token refreshed.' });
+  } catch (err) {
+    clearTokenCookies(res);
+    return res.status(401).json({ success: false, message: 'Invalid or expired refresh token.' });
+  }
+};
+
 module.exports = {
   handleGoogleCallback,
   validateAdminKey,
@@ -233,4 +267,5 @@ module.exports = {
   completeProfile,
   registerLocal,
   loginLocal,
+  refresh,
 };
