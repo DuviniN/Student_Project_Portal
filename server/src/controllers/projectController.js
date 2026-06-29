@@ -11,7 +11,7 @@ const getAllProjects = async (req, res) => {
 
     if (search) {
       params.push(`%${search}%`);
-      whereExtra += ` AND (p.title ILIKE $${params.length} OR p.description ILIKE $${params.length})`;
+      whereExtra += ` AND (p.title ILIKE $${params.length} OR p.description ILIKE $${params.length} OR EXISTS (SELECT 1 FROM project_tags pt_search WHERE pt_search.project_id = p.id AND pt_search.tag ILIKE $${params.length}))`;
     }
 
     const result = await pool.query(
