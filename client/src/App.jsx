@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
@@ -58,6 +59,7 @@ export default function App() {
         <Route path="/profile/:id" element={<Layout><StudentProfilePage /></Layout>} />
         <Route path="/students" element={<Layout><ProjectsPage /></Layout>} />
         <Route path="/auth/login" element={<Layout hideFooter><LoginPage /></Layout>} />
+        <Route path="/auth/register" element={<Layout hideFooter><RegisterPage /></Layout>} />
 
         {/* Complete profile after OAuth */}
         <Route

@@ -16,12 +16,17 @@ const createTables = async () => {
   try {
     console.log('Connected to PostgreSQL...');
     await client.query('BEGIN');
+    // Drop existing tables to apply schema changes cleanly
+    await run(client, `
+      DROP TABLE IF EXISTS notifications, likes, followers, project_tags, projects, users, "session" CASCADE;
+    `);
 
     // ── USERS ───────────────────────────────────────────────────────────────
     await run(client, `
       CREATE TABLE IF NOT EXISTS users (
         id             SERIAL        PRIMARY KEY,
-        google_id      VARCHAR(255)  UNIQUE NOT NULL,
+        google_id      VARCHAR(255)  UNIQUE,
+        password       VARCHAR(255),
         name           VARCHAR(255)  NOT NULL,
         email          VARCHAR(255)  UNIQUE NOT NULL,
         profile_pic    VARCHAR(500),

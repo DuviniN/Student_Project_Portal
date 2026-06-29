@@ -1,4 +1,6 @@
 const { signToken, setTokenCookie, clearTokenCookie } = require('../utils/jwt');
+const bcrypt = require('bcryptjs');
+const pool = require('../config/db');
 
 // Called after successful Google OAuth
 const handleGoogleCallback = (req, res) => {
@@ -91,6 +93,78 @@ const completeProfile = async (req, res) => {
   }
 };
 
+const registerLocal = async (req, res) => {
+  try {
+    const { name, email, password, role, student_id } = req.body;
+    
+    // Check if email exists
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.rows.length) {
+      return res.status(409).json({ success: false, message: 'Email already in use.' });
+    }
+
+    // Check student ID if role is student
+    let sid = null;
+    if (role === 'student' && student_id) {
+      sid = student_id.trim().toUpperCase();
+      const existingSid = await pool.query('SELECT id FROM users WHERE student_id = $1', [sid]);
+      if (existingSid.rows.length) {
+        return res.status(409).json({ success: false, message: 'Student ID already in use.' });
+      }
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Insert user
+    const insertResult = await pool.query(
+      `INSERT INTO users (name, email, password, role, student_id)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      [name, email, hashedPassword, role, sid]
+    );
+
+    const userId = insertResult.rows[0].id;
+    const token = signToken(userId);
+    setTokenCookie(res, token);
+    
+    res.status(201).json({ success: true, message: 'Registration successful.' });
+  } catch (err) {
+    console.error('[registerLocal]', err.message);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const loginLocal = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+    }
+
+    const user = result.rows[0];
+
+    if (!user.password) {
+      return res.status(401).json({ success: false, message: 'Please login with Google.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+    }
+
+    const token = signToken(user.id);
+    setTokenCookie(res, token);
+
+    res.json({ success: true, message: 'Login successful.' });
+  } catch (err) {
+    console.error('[loginLocal]', err.message);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
 module.exports = {
   handleGoogleCallback,
   handleAdminGoogleCallback,
@@ -99,4 +173,6 @@ module.exports = {
   logout,
   getMe,
   completeProfile,
+  registerLocal,
+  loginLocal,
 };

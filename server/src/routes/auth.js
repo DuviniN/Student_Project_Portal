@@ -11,6 +11,8 @@ const {
   logout,
   getMe,
   completeProfile,
+  registerLocal,
+  loginLocal,
 } = require('../controllers/authController');
 
 const router = express.Router();
@@ -65,5 +67,18 @@ router.post(
   validate,
   completeProfile
 );
+
+// ── Local Auth ────────────────────────────────────────────────────────────────
+router.post('/register', [
+  body('name').trim().notEmpty().withMessage('Name is required.'),
+  body('email').isEmail().withMessage('Valid email is required.'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
+  body('role').isIn(['student', 'recruiter']).withMessage('Invalid role.'),
+], validate, registerLocal);
+
+router.post('/login', [
+  body('email').isEmail().withMessage('Valid email is required.'),
+  body('password').notEmpty().withMessage('Password is required.'),
+], validate, loginLocal);
 
 module.exports = router;

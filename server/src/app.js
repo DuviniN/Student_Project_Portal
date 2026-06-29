@@ -18,7 +18,7 @@ const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notifications');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // ── Security ──────────────────────────────────────────────────────────────────
 app.use(helmet({ crossOriginEmbedderPolicy: false }));

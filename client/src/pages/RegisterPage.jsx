@@ -61,29 +61,35 @@ function MiniProjectCard({ title, tech, delay = 0 }) {
   );
 }
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('student');
+  const [studentId, setStudentId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { fetchMe } = useAuthStore();
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await api.post('/auth/login', { email, password });
-      toast.success('Login successful!');
+      await api.post('/auth/register', { name, email, password, role, student_id: studentId });
+      toast.success('Registration successful!');
       await fetchMe();
       navigate('/dashboard');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      toast.error(err.response?.data?.message || 'Registration failed');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isFormValid = email.trim().length > 0 && password.length >= 6;
+  const isFormValid = name.trim().length > 0 && 
+                      email.trim().length > 0 && 
+                      password.length >= 6 &&
+                      (role !== 'student' || studentId.trim().length > 0);
 
   return (
     <div className="h-screen flex">
@@ -130,43 +136,24 @@ export default function LoginPage() {
             transition={{ delay: 0.2, duration: 0.6 }}
           >
             <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight">
-              Where student<br />projects meet<br />opportunity.
+              Join the future<br />of innovation.
             </h1>
             <p className="text-white/70 text-base mt-4 max-w-xs leading-relaxed">
-              Showcase your work, connect with companies, and build your career from
-              the University of Kelaniya.
+              Create an account to discover, share, and collaborate on groundbreaking projects.
             </p>
           </motion.div>
-
-          {/* Mini stat cards */}
-          <div className="grid grid-cols-2 gap-3 max-w-xs">
-            <StatCard icon={FiCode} value="500+" label="Projects" delay={0.4} />
-            <StatCard icon={FiUsers} value="200+" label="Students" delay={0.5} />
-            <StatCard icon={FiBriefcase} value="50+" label="Companies" delay={0.6} />
-            <StatCard icon={FiTrendingUp} value="1k+" label="Connections" delay={0.7} />
-          </div>
         </div>
 
-        {/* Bottom — floating project cards */}
-        <div className="relative space-y-2.5">
-          <MiniProjectCard
-            title="Smart Campus Navigation System"
-            tech={['React', 'Node.js', 'ML']}
-            delay={0.9}
-          />
-          <MiniProjectCard
-            title="Lecture Attendance Tracker"
-            tech={['Flutter', 'Firebase']}
-            delay={1.0}
-          />
-          <p className="text-white/40 text-xs mt-3">
+        {/* Bottom — placeholder */}
+        <div className="relative">
+          <p className="text-white/40 text-xs">
             Faculty of Computing · University of Kelaniya
           </p>
         </div>
       </div>
 
       {/* ── Right panel ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col justify-center items-center px-6 sm:px-10 pb-16 pt-24 bg-white">
+      <div className="flex-1 flex flex-col justify-center items-center px-6 sm:px-10 pb-6 pt-24 bg-white overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -184,12 +171,25 @@ export default function LoginPage() {
             <span className="font-bold text-gray-900">UOK <span className="text-green-600">Connect</span></span>
           </Link>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h2>
-          <p className="text-gray-500 text-sm mb-8">Sign in to your account to continue</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Create an account</h2>
+          <p className="text-gray-500 text-sm mb-4">Enter your details to register</p>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address
               </label>
               <input
@@ -197,13 +197,12 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                autoFocus
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
@@ -211,26 +210,62 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Role
+              </label>
+              <select
+                value={role}
+                onChange={(e) => {
+                  setRole(e.target.value);
+                  if (e.target.value !== 'student') setStudentId('');
+                }}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow bg-white"
+              >
+                <option value="student">Student</option>
+                <option value="recruiter">Recruiter / Company</option>
+              </select>
+            </div>
+
+            {role === 'student' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <label className="block text-sm font-medium text-gray-700 mb-1 mt-3">
+                  University Student ID
+                </label>
+                <input
+                  type="text"
+                  value={studentId}
+                  onChange={(e) => setStudentId(e.target.value)}
+                  placeholder="e.g. 2020/CS/001"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
+                />
+              </motion.div>
+            )}
 
             <button
               type="submit"
               disabled={!isFormValid || isLoading}
-              className={`w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 mt-2 ${
+              className={`w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 mt-3 ${
                 isFormValid && !isLoading
                   ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm cursor-pointer'
                   : 'bg-green-100 text-green-400 cursor-not-allowed'
               }`}
             >
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? 'Creating Account...' : 'Create Account'}
               {!isLoading && isFormValid && <FiArrowRight size={15} />}
             </button>
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-3 my-6">
+          <div className="flex items-center gap-3 my-4">
             <div className="flex-1 h-px bg-gray-100" />
             <span className="text-xs text-gray-300">or continue with</span>
             <div className="flex-1 h-px bg-gray-100" />
@@ -238,17 +273,17 @@ export default function LoginPage() {
 
           <button
             type="button"
-            onClick={() => window.location.href = `${API_BASE}/auth/google/student`}
-            className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all duration-200 shadow-sm"
+            onClick={() => window.location.href = `${API_BASE}/auth/google/${role}`}
+            className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all duration-200 shadow-sm"
           >
             <GoogleIcon />
             Google
           </button>
 
-          <p className="text-center text-sm text-gray-500 mt-8">
-            Don't have an account?{' '}
-            <Link to="/auth/register" className="text-green-600 hover:text-green-700 font-medium">
-              Register here
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Already have an account?{' '}
+            <Link to="/auth/login" className="text-green-600 hover:text-green-700 font-medium">
+              Log in
             </Link>
           </p>
         </motion.div>
