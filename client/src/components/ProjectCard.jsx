@@ -30,11 +30,9 @@ export default function ProjectCard({ project, index = 0 }) {
         {/* Tags */}
         {project.tags?.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {project.tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">
-                #{tag}
-              </span>
-            ))}
+            <span className="px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">
+              #{project.tags[0]}
+            </span>
           </div>
         )}
 
@@ -47,28 +45,20 @@ export default function ProjectCard({ project, index = 0 }) {
           {project.description}
         </p>
 
-        {/* Author & Category */}
-        <div className="flex items-center justify-between mb-4">
-          <Link to={`/profile/${project.user_id}`} className="flex items-center gap-2 group/author">
-            {project.author_pic ? (
-              <img src={project.author_pic} alt={project.author_name} className="w-6 h-6 rounded-full object-cover" />
-            ) : (
-              <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">
-                {project.author_name?.[0]}
-              </div>
-            )}
-            <span className="text-xs text-gray-500 group-hover/author:text-gray-700 transition-colors">
-              {project.author_name}
-              {project.student_id && <span className="ml-1 text-gray-400">· {project.student_id}</span>}
-            </span>
-          </Link>
-
-          {project.tags?.length > 0 && (
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-              {project.tags[0]}
-            </span>
+        {/* Author */}
+        <Link to={`/profile/${project.user_id}`} className="flex items-center gap-2 mb-4 group/author">
+          {project.author_pic ? (
+            <img src={project.author_pic} alt={project.author_name} className="w-6 h-6 rounded-full object-cover" />
+          ) : (
+            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+              {project.author_name?.[0]}
+            </div>
           )}
-        </div>
+          <span className="text-xs text-gray-500 group-hover/author:text-gray-700 transition-colors">
+            {project.author_name}
+            {project.student_id && <span className="ml-1 text-gray-400">· {project.student_id}</span>}
+          </span>
+        </Link>
 
         {/* Footer stats */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-50">
