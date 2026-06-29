@@ -92,9 +92,9 @@ export default function RegisterPage() {
                       (role !== 'student' || studentId.trim().length > 0);
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-screen flex">
       {/* ── Left panel ─────────────────────────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[52%] xl:w-[55%] relative overflow-hidden flex-col justify-between p-10
+      <div className="hidden lg:flex lg:w-[52%] xl:w-[55%] relative overflow-hidden flex-col justify-between p-10 pt-24
         bg-gradient-to-br from-green-700 via-green-600 to-emerald-500"
       >
         {/* Background texture */}
@@ -153,7 +153,7 @@ export default function RegisterPage() {
       </div>
 
       {/* ── Right panel ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col justify-center items-center px-6 sm:px-10 py-12 bg-white overflow-y-auto">
+      <div className="flex-1 flex flex-col justify-center items-center px-6 sm:px-10 pb-6 pt-24 bg-white overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -172,11 +172,11 @@ export default function RegisterPage() {
           </Link>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Create an account</h2>
-          <p className="text-gray-500 text-sm mb-6">Enter your details to register</p>
+          <p className="text-gray-500 text-sm mb-4">Enter your details to register</p>
 
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name
               </label>
               <input
@@ -184,12 +184,12 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="John Doe"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address
               </label>
               <input
@@ -197,12 +197,12 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
@@ -210,12 +210,12 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Role
               </label>
               <select
@@ -224,7 +224,7 @@ export default function RegisterPage() {
                   setRole(e.target.value);
                   if (e.target.value !== 'student') setStudentId('');
                 }}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow bg-white"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow bg-white"
               >
                 <option value="student">Student</option>
                 <option value="recruiter">Recruiter / Company</option>
@@ -237,7 +237,7 @@ export default function RegisterPage() {
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
               >
-                <label className="block text-sm font-medium text-gray-700 mb-1.5 mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1 mt-3">
                   University Student ID
                 </label>
                 <input
@@ -245,7 +245,7 @@ export default function RegisterPage() {
                   value={studentId}
                   onChange={(e) => setStudentId(e.target.value)}
                   placeholder="e.g. 2020/CS/001"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-shadow"
                 />
               </motion.div>
             )}
@@ -253,7 +253,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={!isFormValid || isLoading}
-              className={`w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 mt-4 ${
+              className={`w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 mt-3 ${
                 isFormValid && !isLoading
                   ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm cursor-pointer'
                   : 'bg-green-100 text-green-400 cursor-not-allowed'
@@ -265,21 +265,22 @@ export default function RegisterPage() {
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-3 my-5">
+          <div className="flex items-center gap-3 my-4">
             <div className="flex-1 h-px bg-gray-100" />
             <span className="text-xs text-gray-300">or continue with</span>
             <div className="flex-1 h-px bg-gray-100" />
           </div>
 
           <button
+            type="button"
             onClick={() => window.location.href = `${API_BASE}/auth/google/${role}`}
-            className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all duration-200 shadow-sm"
+            className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all duration-200 shadow-sm"
           >
             <GoogleIcon />
             Google
           </button>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm text-gray-500 mt-4">
             Already have an account?{' '}
             <Link to="/auth/login" className="text-green-600 hover:text-green-700 font-medium">
               Log in

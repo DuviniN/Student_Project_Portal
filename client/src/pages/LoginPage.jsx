@@ -86,9 +86,9 @@ export default function LoginPage() {
   const isFormValid = email.trim().length > 0 && password.length >= 6;
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-screen flex">
       {/* ── Left panel ─────────────────────────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[52%] xl:w-[55%] relative overflow-hidden flex-col justify-between p-10
+      <div className="hidden lg:flex lg:w-[52%] xl:w-[55%] relative overflow-hidden flex-col justify-between p-10 pt-24
         bg-gradient-to-br from-green-700 via-green-600 to-emerald-500"
       >
         {/* Background texture */}
@@ -166,7 +166,7 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right panel ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col justify-center items-center px-6 sm:px-10 py-16 bg-white">
+      <div className="flex-1 flex flex-col justify-center items-center px-6 sm:px-10 pb-16 pt-24 bg-white">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -237,6 +237,7 @@ export default function LoginPage() {
           </div>
 
           <button
+            type="button"
             onClick={() => window.location.href = `${API_BASE}/auth/google/student`}
             className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all duration-200 shadow-sm"
           >
