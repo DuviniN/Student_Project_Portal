@@ -70,8 +70,8 @@ export default function RegisterPage() {
       });
       await fetchMe();
       toast.success('Account created successfully!');
-      if (role === 'student') {
-        navigate('/dashboard', { replace: true });
+      if (role === 'recruiter') {
+        navigate('/projects', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
       }

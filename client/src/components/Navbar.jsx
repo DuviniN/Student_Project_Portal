@@ -39,7 +39,7 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler);
   }, [dropdownOpen]);
 
-  const navLinks = [
+  const navLinks = user?.role === 'recruiter' ? [] : [
     { to: '/projects', label: 'Projects' },
     { to: '/students', label: 'Students' },
   ];
@@ -147,18 +147,22 @@ export default function Navbar() {
                             <p className="text-xs text-green-600 mt-0.5">{user.student_id}</p>
                           )}
                         </div>
-                        <Link
-                          to="/dashboard"
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <FiGrid size={14} className="text-gray-400" /> Dashboard
-                        </Link>
-                        <Link
-                          to={`/profile/${user.id}`}
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <FiUser size={14} className="text-gray-400" /> My Profile
-                        </Link>
+                        {user.role !== 'recruiter' && (
+                          <>
+                            <Link
+                              to="/dashboard"
+                              className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              <FiGrid size={14} className="text-gray-400" /> Dashboard
+                            </Link>
+                            <Link
+                              to={`/profile/${user.id}`}
+                              className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              <FiUser size={14} className="text-gray-400" /> My Profile
+                            </Link>
+                          </>
+                        )}
                         {unreadCount > 0 && (
                           <Link
                             to="/notifications"
@@ -254,7 +258,9 @@ export default function Navbar() {
                         <p className="text-xs font-semibold text-gray-800">{user.name}</p>
                         {user.student_id && <p className="text-xs text-green-600">{user.student_id}</p>}
                       </div>
-                      <Link to="/dashboard" className="block px-4 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50">Dashboard</Link>
+                      {user.role !== 'recruiter' && (
+                        <Link to="/dashboard" className="block px-4 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50">Dashboard</Link>
+                      )}
                       <Link to="/notifications" className="block px-4 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
                         Notifications
                         {unreadCount > 0 && (

@@ -64,8 +64,12 @@ export default function LoginPage() {
       const res = await api.post('/auth/login', { email, password });
       await fetchMe();
       toast.success('Welcome back!');
-      // Role-based redirect: all roles go to /dashboard which shows role-aware content
-      navigate('/dashboard', { replace: true });
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.role === 'recruiter') {
+        navigate('/projects', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed. Check your credentials.');
     } finally {

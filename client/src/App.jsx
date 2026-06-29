@@ -33,7 +33,10 @@ function Layout({ children, hideFooter }) {
 function GuestRoute({ children }) {
   const { user, loading } = useAuthStore();
   if (loading) return null;
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user) {
+    if (user.role === 'recruiter') return <Navigate to="/projects" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
   return children;
 }
 
@@ -91,7 +94,7 @@ export default function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['student', 'admin']}>
               <Layout><DashboardPage /></Layout>
             </ProtectedRoute>
           }

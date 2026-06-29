@@ -35,11 +35,12 @@ const handleGoogleCallback = (req, res) => {
     return res.redirect(`${process.env.CLIENT_URL}/complete-profile`);
   }
 
-  // Admin: dashboard (will show admin UI)
-  if (user.role === 'admin') {
-    return res.redirect(`${process.env.CLIENT_URL}/dashboard`);
+  // Recruiter: redirect to projects listing
+  if (user.role === 'recruiter') {
+    return res.redirect(`${process.env.CLIENT_URL}/projects`);
   }
 
+  // Admin & Student: dashboard
   return res.redirect(`${process.env.CLIENT_URL}/dashboard`);
 };
 

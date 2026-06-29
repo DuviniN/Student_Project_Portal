@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { FiArrowRight, FiCode, FiUsers, FiBriefcase, FiStar, FiTrendingUp } from 'react-icons/fi';
 import api from '../services/api';
+import useAuthStore from '../store/authStore';
 import ProjectCard from '../components/ProjectCard';
 
 const fadeUp = {
@@ -35,6 +36,7 @@ function CountUp({ target, suffix = '' }) {
 }
 
 export default function LandingPage() {
+  const { user } = useAuthStore();
   const [featuredProjects, setFeaturedProjects] = useState([]);
 
   useEffect(() => {
@@ -105,15 +107,21 @@ export default function LandingPage() {
             </motion.p>
 
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/auth/login"
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-green-200 hover:shadow-green-300 hover:-translate-y-0.5 text-base"
-              >
-                Add Your Project <FiArrowRight size={18} />
-              </Link>
+              {user?.role !== 'recruiter' && (
+                <Link
+                  to="/auth/login"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-green-200 hover:shadow-green-300 hover:-translate-y-0.5 text-base"
+                >
+                  Add Your Project <FiArrowRight size={18} />
+                </Link>
+              )}
               <Link
                 to="/projects"
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-xl border border-gray-200 transition-all duration-200 hover:-translate-y-0.5 text-base"
+                className={`inline-flex items-center gap-2 px-7 py-3.5 font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 text-base ${
+                  user?.role === 'recruiter' 
+                    ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-200'
+                    : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                }`}
               >
                 Browse Projects
               </Link>
@@ -216,16 +224,18 @@ export default function LandingPage() {
             className="bg-gradient-to-br from-green-600 to-green-700 rounded-3xl p-12 shadow-xl shadow-green-200/50"
           >
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Ready to showcase your work?
+              {user?.role === 'recruiter' ? 'Ready to discover top talent?' : 'Ready to showcase your work?'}
             </h2>
             <p className="text-green-100 text-lg mb-8 max-w-xl mx-auto">
-              Join hundreds of UOK students who are already building their portfolios and getting discovered.
+              {user?.role === 'recruiter'
+                ? 'Browse hundreds of innovative projects built by UOK students.'
+                : 'Join hundreds of UOK students who are already building their portfolios and getting discovered.'}
             </p>
             <Link
-              to="/auth/login"
+              to={user?.role === 'recruiter' ? '/projects' : '/auth/login'}
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-green-700 font-bold rounded-xl hover:bg-green-50 transition-all duration-200 shadow-lg hover:-translate-y-0.5 text-base"
             >
-              Get Started Free <FiArrowRight size={18} />
+              {user?.role === 'recruiter' ? 'Browse Projects' : 'Get Started Free'} <FiArrowRight size={18} />
             </Link>
           </motion.div>
         </div>
