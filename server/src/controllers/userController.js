@@ -33,6 +33,9 @@ const getUserProjects = async (req, res) => {
     const { page = 1, limit = 12 } = req.query;
     const offset = (page - 1) * limit;
 
+    const canViewDrafts = req.user && (req.user.id === parseInt(id, 10) || req.user.role === 'admin');
+    const statusCondition = canViewDrafts ? "" : " AND p.status = 'published'";
+
     const result = await pool.query(
       `SELECT p.*, COALESCE(l.like_count, 0)::int AS like_count,
               ARRAY_REMOVE(ARRAY_AGG(DISTINCT pt.tag), NULL) AS tags
@@ -40,7 +43,7 @@ const getUserProjects = async (req, res) => {
        LEFT JOIN (SELECT project_id, COUNT(*) AS like_count FROM likes GROUP BY project_id) l
          ON p.id = l.project_id
        LEFT JOIN project_tags pt ON p.id = pt.project_id
-       WHERE p.user_id = $1 AND p.status = 'published'
+       WHERE p.user_id = $1${statusCondition}
        GROUP BY p.id, l.like_count
        ORDER BY p.created_at DESC
        LIMIT $2 OFFSET $3`,
