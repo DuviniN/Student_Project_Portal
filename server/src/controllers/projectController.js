@@ -5,13 +5,23 @@ const emitter = require('../events/eventEmitter');
 const getAllProjects = async (req, res) => {
   try {
     const { page = 1, limit = 12, search, tag, status = 'published' } = req.query;
+    
+    if ((status === 'draft' || status === 'all') && (!req.user || req.user.role !== 'admin')) {
+      return res.status(403).json({ success: false, message: `Forbidden: Cannot view ${status} projects` });
+    }
+
     const offset = (page - 1) * limit;
-    const params = [status, parseInt(limit, 10), offset];
-    let whereExtra = '';
+    const params = [parseInt(limit, 10), offset];
+    let whereClause = 'WHERE 1=1';
+
+    if (status !== 'all') {
+      params.push(status);
+      whereClause += ` AND p.status = $${params.length}`;
+    }
 
     if (search) {
       params.push(`%${search}%`);
-      whereExtra += ` AND (p.title ILIKE $${params.length} OR p.description ILIKE $${params.length})`;
+      whereClause += ` AND (p.title ILIKE $${params.length} OR p.description ILIKE $${params.length})`;
     }
 
     const result = await pool.query(
@@ -23,16 +33,23 @@ const getAllProjects = async (req, res) => {
        LEFT JOIN (SELECT project_id, COUNT(*) AS like_count FROM likes GROUP BY project_id) l
          ON p.id = l.project_id
        LEFT JOIN project_tags pt ON p.id = pt.project_id
-       WHERE p.status = $1 ${whereExtra}
+       ${whereClause}
        GROUP BY p.id, u.name, u.profile_pic, u.student_id, l.like_count
        ORDER BY p.created_at DESC
-       LIMIT $2 OFFSET $3`,
+       LIMIT $1 OFFSET $2`,
       params
     );
 
+    const countParams = [];
+    let countWhereClause = 'WHERE 1=1';
+    if (status !== 'all') {
+      countParams.push(status);
+      countWhereClause += ` AND status = $${countParams.length}`;
+    }
+
     const countResult = await pool.query(
-      `SELECT COUNT(*) FROM projects WHERE status = $1`,
-      [status]
+      `SELECT COUNT(*) FROM projects ${countWhereClause}`,
+      countParams
     );
 
     res.json({
@@ -72,7 +89,16 @@ const getProject = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Project not found.' });
     }
 
-    res.json({ success: true, project: result.rows[0] });
+    const project = result.rows[0];
+    if (project.status === 'draft') {
+      const isOwner = req.user && req.user.id === project.user_id;
+      const isAdmin = req.user && req.user.role === 'admin';
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({ success: false, message: 'Forbidden.' });
+      }
+    }
+
+    res.json({ success: true, project });
   } catch (err) {
     console.error('[getProject]', err.message);
     res.status(500).json({ success: false, message: 'Server error.' });
@@ -96,10 +122,14 @@ const createProject = async (req, res) => {
       thumbnail_url = result.secure_url;
     }
 
-    const techStackJson = JSON.stringify(
-      Array.isArray(tech_stack) ? tech_stack : JSON.parse(tech_stack || '[]')
-    );
-    const tagArray = Array.isArray(tags) ? tags : JSON.parse(tags || '[]');
+    let techStackJson = '[]';
+    let tagArray = [];
+    try {
+      techStackJson = JSON.stringify(Array.isArray(tech_stack) ? tech_stack : JSON.parse(tech_stack || '[]'));
+      tagArray = Array.isArray(tags) ? tags : JSON.parse(tags || '[]');
+    } catch (e) {
+      console.warn('Invalid JSON in tech_stack or tags:', e.message);
+    }
 
     await client.query('BEGIN');
 
@@ -164,9 +194,18 @@ const updateProject = async (req, res) => {
       thumbnail_url = result.secure_url;
     }
 
-    const techStackJson = tech_stack
-      ? JSON.stringify(Array.isArray(tech_stack) ? tech_stack : JSON.parse(tech_stack))
-      : project.tech_stack;
+    let techStackJson = project.tech_stack;
+    let tagArray = [];
+    try {
+      if (tech_stack) {
+        techStackJson = JSON.stringify(Array.isArray(tech_stack) ? tech_stack : JSON.parse(tech_stack));
+      }
+      if (tags !== undefined) {
+        tagArray = Array.isArray(tags) ? tags : JSON.parse(tags || '[]');
+      }
+    } catch (e) {
+      console.warn('Invalid JSON in tech_stack or tags:', e.message);
+    }
 
     await client.query('BEGIN');
 
@@ -186,7 +225,6 @@ const updateProject = async (req, res) => {
 
     if (tags !== undefined) {
       await client.query('DELETE FROM project_tags WHERE project_id = $1', [id]);
-      const tagArray = Array.isArray(tags) ? tags : JSON.parse(tags || '[]');
       if (tagArray.length) {
         const tagValues = tagArray.map((_, i) => `($1, $${i + 2})`).join(', ');
         await client.query(
