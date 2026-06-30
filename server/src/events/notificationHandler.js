@@ -47,21 +47,22 @@ emitter.on('UserFollowed', async ({ following, follower }) => {
   }
 });
 
-// COMMENT_ADDED: notify the project owner (skip if commenting on own project)
-emitter.on('CommentAdded', async ({ comment, project, actor }) => {
+// USER_REGISTERED: notify all admins when a new user registers
+emitter.on('UserRegistered', async (newUser) => {
   try {
-    if (actor.id === project.user_id) return; // no self-notification
+    const admins = await pool.query("SELECT id FROM users WHERE role = 'admin'");
+    const message = `${newUser.name} just registered as a ${newUser.role}.`;
 
-    const message = `${actor.name} commented on your project "${project.title}".`;
+    for (const admin of admins.rows) {
+      await pool.query(
+        `INSERT INTO notifications (recipient_id, actor_id, type, message)
+         VALUES ($1, $2, 'user_registered', $3)`,
+        [admin.id, newUser.id, message]
+      );
+    }
 
-    await pool.query(
-      `INSERT INTO notifications (recipient_id, actor_id, project_id, type, message)
-       VALUES ($1, $2, $3, 'comment', $4)`,
-      [project.user_id, actor.id, project.id, message]
-    );
-
-    console.log(`[Event] CommentAdded notification sent to user ${project.user_id}`);
+    console.log(`[Event] UserRegistered: notified ${admins.rows.length} admin(s) about ${newUser.name}`);
   } catch (err) {
-    console.error('[Event] CommentAdded handler error:', err.message);
+    console.error('[Event] UserRegistered handler error:', err.message);
   }
 });

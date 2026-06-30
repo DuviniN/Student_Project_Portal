@@ -4,16 +4,18 @@ const emitter = require('../events/eventEmitter');
 const getUserProfile = async (req, res) => {
   try {
     const { id } = req.params;
+    const currentUserId = req.user ? req.user.id : null;
     const result = await pool.query(
       `SELECT u.id, u.name, u.email, u.profile_pic, u.role, u.student_id, u.created_at,
               COUNT(DISTINCT p.id)::int AS project_count,
-              COUNT(DISTINCT f.follower_id)::int AS follower_count
+              COUNT(DISTINCT f.follower_id)::int AS follower_count,
+              EXISTS(SELECT 1 FROM followers f2 WHERE f2.follower_id = $2 AND f2.following_id = u.id) AS is_following
        FROM users u
        LEFT JOIN projects p ON u.id = p.user_id AND p.status = 'published'
        LEFT JOIN followers f ON u.id = f.following_id
        WHERE u.id = $1
        GROUP BY u.id`,
-      [id]
+      [id, currentUserId]
     );
 
     if (!result.rows.length) {

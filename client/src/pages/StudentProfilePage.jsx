@@ -21,16 +21,21 @@ export default function StudentProfilePage() {
       api.get(`/users/${id}/projects`),
     ]).then(([profileRes, projectsRes]) => {
       setProfile(profileRes.data.user);
+      setFollowing(profileRes.data.user.is_following || false);
       setProjects(projectsRes.data.projects);
     }).catch(() => toast.error('Could not load profile.'))
       .finally(() => setLoading(false));
   }, [id]);
 
   const handleFollow = async () => {
-    if (!user) { toast.error('Sign in to follow students.'); return; }
+    if (!user) { toast.error('Sign in to follow users.'); return; }
     try {
       const res = await api.post(`/users/${id}/follow`);
       setFollowing(res.data.following);
+      setProfile(prev => ({
+        ...prev,
+        follower_count: prev.follower_count + (res.data.following ? 1 : -1)
+      }));
       toast.success(res.data.message);
     } catch {
       toast.error('Could not update follow.');

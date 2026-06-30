@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const pool = require('../config/db');
+const emitter = require('../events/eventEmitter');
 const { signToken, signRefreshToken, setTokenCookies, clearTokenCookies } = require('../utils/jwt');
 
 // ── Google OAuth callback (shared by all flows) ──────────────────────────────
@@ -182,6 +183,9 @@ const registerLocal = async (req, res) => {
       message: 'Registration successful.',
       role: newUser.role,
     });
+
+    // Emit event for admin notifications (after response is sent)
+    emitter.emit('UserRegistered', { id: newUser.id, name, email, role: newUser.role });
   } catch (err) {
     console.error('[registerLocal]', err.message);
     res.status(500).json({ success: false, message: 'Server error.' });
@@ -210,6 +214,11 @@ const loginLocal = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // Blocked user check
+    if (user.is_blocked) {
+      return res.status(403).json({ success: false, message: 'Your account has been suspended.' });
     }
 
     const token = signToken(user.id);
@@ -246,6 +255,12 @@ const refresh = async (req, res) => {
     }
 
     const user = result.rows[0];
+
+    if (user.is_blocked) {
+      clearTokenCookies(res);
+      return res.status(403).json({ success: false, message: 'Your account has been suspended.' });
+    }
+
     const newToken = signToken(user.id);
     const newRefreshToken = signRefreshToken(user.id);
     

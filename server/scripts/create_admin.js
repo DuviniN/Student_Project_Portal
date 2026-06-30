@@ -24,7 +24,7 @@ async function addAdmin() {
     'admin@gmail.com',
     'admin',
     true,
-    '$2b$12$zAn1IM3fia0ADDkvn8HAyOebLFy71GmrTd6l8TnR1839I1OmtMXcq'
+    '$2b$10$aPfWylZmlr2kYu9AlwelvO9I7S0Y84wQrWbd5YQjWeML0o/o9BtLG'
   ];
   // chanage hash as you need 
   try {
