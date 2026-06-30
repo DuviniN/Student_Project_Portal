@@ -1,6 +1,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const pool = require('./db');
+const emitter = require('../events/eventEmitter');
 
 /**
  * Role resolution via OAuth `state` parameter.
@@ -47,6 +48,11 @@ passport.use(
             return done(null, false, { message: 'This Google account is not registered as an admin.' });
           }
 
+          // Blocked user check
+          if (user.is_blocked) {
+            return done(null, false, { message: 'Your account has been suspended.' });
+          }
+
           // Link Google ID to an existing email/password account (first Google login)
           if (!user.google_id) {
             await pool.query(
@@ -86,7 +92,10 @@ passport.use(
           [googleId, name, email, profilePic, role]
         );
 
-        return done(null, insertResult.rows[0]);
+        const newUser = insertResult.rows[0];
+        emitter.emit('UserRegistered', newUser);
+
+        return done(null, newUser);
       } catch (err) {
         return done(err);
       }

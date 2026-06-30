@@ -15,7 +15,15 @@ const authenticate = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'User not found.' });
     }
 
-    req.user = result.rows[0];
+    const user = result.rows[0];
+
+    if (user.is_blocked) {
+      res.clearCookie('token');
+      res.clearCookie('refreshToken');
+      return res.status(403).json({ success: false, message: 'Your account has been suspended.' });
+    }
+
+    req.user = user;
     next();
   } catch (err) {
     res.clearCookie('token');

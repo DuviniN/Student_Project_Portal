@@ -34,6 +34,7 @@ const createTables = async () => {
                          CHECK (role IN ('student', 'recruiter', 'admin')),
         student_id     VARCHAR(50)   UNIQUE,
         admin_verified BOOLEAN       NOT NULL DEFAULT FALSE,
+        is_blocked     BOOLEAN       NOT NULL DEFAULT FALSE,
         created_at     TIMESTAMP     NOT NULL DEFAULT NOW(),
         updated_at     TIMESTAMP     NOT NULL DEFAULT NOW()
       );
@@ -51,7 +52,7 @@ const createTables = async () => {
         demo_url      VARCHAR(500),
         tech_stack    JSONB         NOT NULL DEFAULT '[]',
         status        VARCHAR(20)   NOT NULL DEFAULT 'published'
-                        CHECK (status IN ('draft', 'published')),
+                        CHECK (status IN ('draft', 'published', 'hidden')),
         view_count    INTEGER       NOT NULL DEFAULT 0,
         created_at    TIMESTAMP     NOT NULL DEFAULT NOW(),
         updated_at    TIMESTAMP     NOT NULL DEFAULT NOW()
@@ -118,6 +119,7 @@ const createTables = async () => {
         project_id   INTEGER     REFERENCES projects(id) ON DELETE SET NULL,
         type         VARCHAR(50) NOT NULL
                        CHECK (type IN ('like', 'follow', 'project_created', 'comment')),
+                       CHECK (type IN ('like', 'follow', 'project_created', 'user_registered', 'admin_action', 'admin_edit', 'admin_delete', 'admin_hide')),
         message      TEXT        NOT NULL,
         is_private   BOOLEAN     NOT NULL DEFAULT FALSE,
         is_read      BOOLEAN     NOT NULL DEFAULT FALSE,

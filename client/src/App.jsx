@@ -1,36 +1,49 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
-import { FiAlertTriangle } from 'react-icons/fi';
+
+// Components
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// Public pages
 import LandingPage from './pages/LandingPage';
+import ProjectsPage from './pages/ProjectsPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
+import StudentProfilePage from './pages/StudentProfilePage';
+
+// Auth pages
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
-import ProjectsPage from './pages/ProjectsPage';
-import ProjectDetailPage from './pages/ProjectDetailPage';
-import ProjectFormPage from './pages/ProjectFormPage';
-import DashboardPage from './pages/DashboardPage';
-import StudentProfilePage from './pages/StudentProfilePage';
-import NotificationsPage from './pages/NotificationsPage';
-import AdminAuthPage from './pages/AdminAuthPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
+import AuthErrorPage from './pages/AuthErrorPage';
 
-function Layout({ children, hideFooter }) {
+// Student pages (protected)
+import DashboardPage from './pages/DashboardPage';
+import ProjectFormPage from './pages/ProjectFormPage';
+import NotificationsPage from './pages/NotificationsPage';
+
+// Admin pages (protected)
+import AdminAuthPage from './pages/admin/AdminAuthPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminUserDetail from './pages/admin/AdminUserDetail';
+import AdminNotifications from './pages/admin/AdminNotifications';
+
+
+/* ── Shared layout wrapper ───────────────────────────────────── */
+function Layout({ children, hideFooter, hideHeader }) {
   return (
     <>
-      <Navbar />
+      {!hideHeader && <Navbar />}
       <main className="flex-1">{children}</main>
       {!hideFooter && <Footer />}
     </>
   );
 }
 
-// Redirect logged-in users away from auth pages
+/* ── Redirect logged-in users away from auth pages ───────────── */
 function GuestRoute({ children }) {
   const { user, loading } = useAuthStore();
   if (loading) return null;
@@ -42,6 +55,7 @@ function GuestRoute({ children }) {
   return children;
 }
 
+/* ── Root component ──────────────────────────────────────────── */
 export default function App() {
   const { fetchMe } = useAuthStore();
 
@@ -65,24 +79,27 @@ export default function App() {
         }}
       />
       <Routes>
-        {/* ── Public routes ──*/}
+        {/* ── Public ─────────────────────────────────────────── */}
         <Route path="/" element={<Layout><LandingPage /></Layout>} />
         <Route path="/projects" element={<Layout><ProjectsPage /></Layout>} />
         <Route path="/projects/:id" element={<Layout><ProjectDetailPage /></Layout>} />
         <Route path="/profile/:id" element={<Layout><StudentProfilePage /></Layout>} />
 
-        {/* ── Auth routes (redirect to dashboard if already logged in) ─ */}
-        <Route path="/auth/login" element={
-          <GuestRoute><Layout hideFooter><LoginPage /></Layout></GuestRoute>
-        } />
-        <Route path="/auth/register" element={
-          <GuestRoute><Layout hideFooter><RegisterPage /></Layout></GuestRoute>
-        } />
+        {/* ── Auth (redirect if already logged in) ───────────── */}
+        <Route
+          path="/auth/login"
+          element={<GuestRoute><Layout hideFooter hideHeader><LoginPage /></Layout></GuestRoute>}
+        />
+        <Route
+          path="/auth/register"
+          element={<GuestRoute><Layout hideFooter hideHeader><RegisterPage /></Layout></GuestRoute>}
+        />
+        <Route path="/auth/error" element={<Layout hideFooter><AuthErrorPage /></Layout>} />
 
-        {/* ── Admin auth (separate, hidden portal) ──*/}
+        {/* ── Admin auth (separate hidden portal) ────────────── */}
         <Route path="/admin/auth" element={<AdminAuthPage />} />
 
-        {/*Protected: complete profile (new OAuth students)*/}
+        {/* ── Protected: complete profile (new OAuth students) ── */}
         <Route
           path="/complete-profile"
           element={
@@ -92,27 +109,15 @@ export default function App() {
           }
         />
 
-        {/* ── Protected: unified dashboard (role-aware content inside) ── */}
+        {/* ── Protected: student ──────────────────────────────── */}
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute roles={['student', 'admin']}>
+            <ProtectedRoute roles={['student']}>
               <Layout><DashboardPage /></Layout>
             </ProtectedRoute>
           }
         />
-
-        {/* Admin Dashboard */}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute roles={['admin']}>
-              <Layout><AdminDashboardPage /></Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ── Protected: project management (students + admins) ────────── */}
         <Route
           path="/projects/new"
           element={
@@ -124,13 +129,11 @@ export default function App() {
         <Route
           path="/projects/:id/edit"
           element={
-            <ProtectedRoute roles={['student', 'admin']}>
+            <ProtectedRoute roles={['student']}>
               <Layout><ProjectFormPage /></Layout>
             </ProtectedRoute>
           }
         />
-
-        {/* ── Protected: notifications ─── */}
         <Route
           path="/notifications"
           element={
@@ -140,38 +143,47 @@ export default function App() {
           }
         />
 
-        {/* ── Auth error page ───*/}
-        <Route
-          path="/auth/error"
-          element={
-            <Layout hideFooter>
-              <AuthErrorPage />
-            </Layout>
-          }
-        />
+        {/* ── Protected: admin ────────────────────────────────── */}
+        <Route path="/admin" element={<Outlet />}>
+          <Route
+            path="dashboard"
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <Layout><AdminDashboardPage /></Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="users" element={<Navigate to="/admin/dashboard?tab=users" replace />} />
+          <Route path="projects" element={<Navigate to="/admin/dashboard?tab=projects" replace />} />
+          <Route
+            path="users/:id"
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <Layout><AdminUserDetail /></Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="projects/:id/edit"
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <Layout><ProjectFormPage /></Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="notifications"
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <Layout><AdminNotifications /></Layout>
+              </ProtectedRoute>
+            }
+          />
+        </Route>
 
+        {/* ── Fallback ─────────────────────────────────────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
-  );
-}
-
-function AuthErrorPage() {
-  const params = new URLSearchParams(window.location.search);
-  const message = params.get('message') || 'Something went wrong during sign in.';
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center max-w-sm px-6">
-        <FiAlertTriangle size={44} className="text-red-300 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Authentication Failed</h1>
-        <p className="text-gray-500 mb-6">{decodeURIComponent(message)}</p>
-        <a
-          href="/auth/login"
-          className="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors"
-        >
-          Back to Login
-        </a>
-      </div>
-    </div>
+      </Routes >
+    </BrowserRouter >
   );
 }
