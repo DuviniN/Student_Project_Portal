@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FiUpload, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import useAuthStore from '../store/authStore';
 
 const schema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(255),
@@ -20,6 +21,7 @@ export default function ProjectFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
   const [thumbnail, setThumbnail] = useState(null);
@@ -87,10 +89,14 @@ export default function ProjectFormPage() {
         await api.put(`/projects/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         toast.success('Project updated!');
       } else {
-        const res = await api.post('/projects', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.post('/projects', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         toast.success('Project created!');
       }
-      navigate('/dashboard');
+      if (user?.role === 'admin') {
+        navigate('/admin/dashboard?tab=projects');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Something went wrong.');
     } finally {
