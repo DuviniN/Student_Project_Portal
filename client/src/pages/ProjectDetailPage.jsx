@@ -236,40 +236,7 @@ const handleCommentSubmit = async () => {
                     </div>
                   )}
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <button
-                      onClick={handleLike}
-                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        liked
-                          ? 'bg-red-50 text-red-600 border border-red-200'
-                          : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
-                      }`}
-                    >
-                      <FiHeart size={16} className={liked ? 'fill-current' : ''} />
-                      {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
-                    </button>
-                    {project.github_url && (
-                      <a
-                        href={project.github_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors"
-                      >
-                        <FiGithub size={16} /> GitHub
-                      </a>
-                    )}
-                    {project.demo_url && (
-                      <a
-                        href={project.demo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
-                      >
-                        <FiExternalLink size={16} /> Live Demo
-                      </a>
-                    )}
-                  </div>
+
                 </div>
 
                 {/* Author card */}

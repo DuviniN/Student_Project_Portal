@@ -260,11 +260,7 @@ export default function LoginPage() {
             </Link>
           </p>
 
-          <p className="text-center mt-3">
-            <Link to="/admin/auth" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-              Admin portal →
-            </Link>
-          </p>
+
         </motion.div>
       </div>
     </div>

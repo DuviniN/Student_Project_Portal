@@ -77,8 +77,8 @@ export default function Navbar() {
             </div>
             <span className="font-bold text-gray-900 text-[15px] tracking-tight flex items-center">
               UOK <span className="text-green-600 ml-1">Connect</span>
-              {user?.role === 'admin' && (
-                <span className="ml-2 px-1.5 py-0.5 bg-gray-900 text-white text-[10px] rounded uppercase tracking-wider">Admin</span>
+              {user?.role && (
+                <span className="ml-2 px-1.5 py-0.5 bg-gray-900 text-white text-[10px] rounded uppercase tracking-wider">{user.role}</span>
               )}
             </span>
           </Link>
