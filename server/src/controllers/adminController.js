@@ -402,6 +402,8 @@ const updateProject = async (req, res) => {
           techStackJson = JSON.stringify(tech_stack.split(',').map(s => s.trim()).filter(Boolean));
         }
       }
+    } else {
+      techStackJson = JSON.stringify(techStackJson || []);
     }
 
     let tagArray = null;

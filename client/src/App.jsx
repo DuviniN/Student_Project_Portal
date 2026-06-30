@@ -29,8 +29,8 @@ import NotificationsPage from './pages/NotificationsPage';
 import AdminAuthPage from './pages/admin/AdminAuthPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminUserDetail from './pages/admin/AdminUserDetail';
-import AdminProjectEdit from './pages/admin/AdminProjectEdit';
 import AdminNotifications from './pages/admin/AdminNotifications';
+// Note: admin project editing reuses ProjectFormPage (imported above under student pages)
 
 /* ── Shared layout wrapper ───────────────────────────────────── */
 function Layout({ children, hideFooter, hideHeader }) {
@@ -167,7 +167,7 @@ export default function App() {
             path="projects/:id/edit"
             element={
               <ProtectedRoute roles={['admin']}>
-                <Layout><AdminProjectEdit /></Layout>
+                <Layout><ProjectFormPage /></Layout>
               </ProtectedRoute>
             }
           />
@@ -183,7 +183,7 @@ export default function App() {
 
         {/* ── Fallback ─────────────────────────────────────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+      </Routes >
+    </BrowserRouter >
   );
 }

@@ -41,8 +41,8 @@ function ProjectThumbnail({ src, title }) {
 /* ── Main component ────────────────────────────────────────────── */
 export default function ProjectsTable() {
   const [projects, setProjects] = useState([]);
-  const [search, setSearch]     = useState('');
-  const [loading, setLoading]   = useState(true);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const debouncedSearch = useDebounce(search, 400);
 
@@ -77,7 +77,7 @@ export default function ProjectsTable() {
 
   // Toggle Visibility
   const handleToggleVisibility = async (project) => {
-    const newStatus = project.status === 'published' ? 'hidden' : 'published';
+    const newStatus = project.status === 'published' ? 'draft' : 'published';
     try {
       await api.patch(`/admin/projects/${project.id}`, { status: newStatus });
       setProjects((prev) =>
@@ -144,11 +144,10 @@ export default function ProjectsTable() {
           <button
             onClick={() => handleToggleVisibility(p)}
             title={p.status === 'published' ? 'Hide from public' : 'Publish project'}
-            className={`p-2 rounded-lg transition-colors ${
-              p.status === 'published'
+            className={`p-2 rounded-lg transition-colors ${p.status === 'published'
                 ? 'text-amber-600 hover:bg-amber-50'
                 : 'text-green-600 hover:bg-green-50'
-            }`}
+              }`}
           >
             {p.status === 'published' ? <FiEyeOff size={15} /> : <FiEye size={15} />}
           </button>

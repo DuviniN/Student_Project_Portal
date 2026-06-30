@@ -255,6 +255,12 @@ const refresh = async (req, res) => {
     }
 
     const user = result.rows[0];
+
+    if (user.is_blocked) {
+      clearTokenCookies(res);
+      return res.status(403).json({ success: false, message: 'Your account has been suspended.' });
+    }
+
     const newToken = signToken(user.id);
     const newRefreshToken = signRefreshToken(user.id);
     
