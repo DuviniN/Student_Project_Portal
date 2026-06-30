@@ -45,6 +45,26 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const { fetchMe } = useAuthStore();
   const [touched, setTouched] = useState({});
+  const [stats, setStats] = useState({
+    projects: 0,
+    students: 0,
+    companies: 0,
+    connections: 0,
+  });
+
+  useEffect(() => {
+    api.get('/public/stats').then((res) => {
+      if (res.data.success) {
+        const { totalProjects, totalStudents, totalCompanies, totalConnections } = res.data.stats;
+        setStats({
+          projects: totalProjects || 0,
+          students: totalStudents || 0,
+          companies: totalCompanies || 0,
+          connections: totalConnections || 0,
+        });
+      }
+    }).catch(() => {});
+  }, []);
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -131,10 +151,10 @@ export default function LoginPage() {
           </motion.div>
 
           <div className="grid grid-cols-2 gap-3 max-w-xs">
-            <StatCard icon={FiCode} value="500+" label="Projects" delay={0.4} />
-            <StatCard icon={FiUsers} value="200+" label="Students" delay={0.5} />
-            <StatCard icon={FiBriefcase} value="50+" label="Companies" delay={0.6} />
-            <StatCard icon={FiTrendingUp} value="1k+" label="Connections" delay={0.7} />
+            <StatCard icon={FiCode} value={`${stats.projects}+`} label="Projects" delay={0.4} />
+            <StatCard icon={FiUsers} value={`${stats.students}+`} label="Students" delay={0.5} />
+            <StatCard icon={FiBriefcase} value={`${stats.companies}+`} label="Companies" delay={0.6} />
+            <StatCard icon={FiTrendingUp} value={`${stats.connections}+`} label="Connections" delay={0.7} />
           </div>
         </div>
 
