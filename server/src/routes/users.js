@@ -9,6 +9,7 @@ const router = express.Router();
 router.get('/', authenticate, requireRole('admin'), getAllUsers);
 
 router.get('/:id',
+  optionalAuth,
   param('id').isInt(),
   validate,
   getUserProfile
