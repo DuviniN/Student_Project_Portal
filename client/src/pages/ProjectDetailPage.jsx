@@ -19,6 +19,7 @@ export default function ProjectDetailPage() {
       .then((res) => {
         setProject(res.data.project);
         setLikeCount(res.data.project.like_count);
+        setLiked(res.data.project.is_liked || false);
       })
       .catch(() => toast.error('Project not found.'))
       .finally(() => setLoading(false));
@@ -29,7 +30,7 @@ export default function ProjectDetailPage() {
     try {
       const res = await api.post(`/projects/${id}/like`);
       setLiked(res.data.liked);
-      setLikeCount((c) => res.data.liked ? c + 1 : c - 1);
+      setLikeCount(res.data.likeCount);
     } catch {
       toast.error('Could not update like.');
     }
