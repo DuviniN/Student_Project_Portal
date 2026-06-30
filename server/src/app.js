@@ -18,7 +18,7 @@ const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notifications');
 
 const adminRoutes = require('./routes/adminRoutes');
-
+const publicRoutes = require('./routes/public');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
@@ -77,6 +77,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/public', publicRoutes);
 
 // Health check
 app.get('/api/health', (req, res) =>

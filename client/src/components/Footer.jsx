@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiGithub, FiLinkedin, FiMail } from 'react-icons/fi';
+import { FiPhone, FiLinkedin, FiMail } from 'react-icons/fi';
 
 export default function Footer() {
   return (
@@ -21,8 +21,8 @@ export default function Footer() {
               opportunities. Showcase your projects, get noticed.
             </p>
             <div className="flex items-center gap-3 mt-5">
-              <a href="#" className="p-2 hover:bg-gray-800 rounded-lg transition-colors hover:text-white">
-                <FiGithub size={17} />
+              <a href="tel:+94712345678" className="p-2 hover:bg-gray-800 rounded-lg transition-colors hover:text-white">
+                <FiPhone size={17} />
               </a>
               <a href="#" className="p-2 hover:bg-gray-800 rounded-lg transition-colors hover:text-white">
                 <FiLinkedin size={17} />

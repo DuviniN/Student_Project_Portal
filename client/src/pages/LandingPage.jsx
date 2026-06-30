@@ -38,6 +38,12 @@ function CountUp({ target, suffix = '' }) {
 export default function LandingPage() {
   const { user } = useAuthStore();
   const [featuredProjects, setFeaturedProjects] = useState([]);
+  const [stats, setStats] = useState([
+    { value: 0, suffix: '+', label: 'Student Projects' },
+    { value: 0, suffix: '+', label: 'Active Students' },
+    { value: 0, suffix: '+', label: 'Companies' },
+    { value: 0, suffix: '+', label: 'Connections Made' },
+  ]);
 
   const navigate = useNavigate();
 
@@ -49,6 +55,17 @@ export default function LandingPage() {
 
   useEffect(() => {
     api.get('/projects?limit=6').then((res) => setFeaturedProjects(res.data.projects)).catch(() => {});
+    api.get('/public/stats').then((res) => {
+      if (res.data.success) {
+        const { totalProjects, totalStudents, totalCompanies, totalConnections } = res.data.stats;
+        setStats([
+          { value: totalProjects || 0, suffix: '+', label: 'Student Projects' },
+          { value: totalStudents || 0, suffix: '+', label: 'Active Students' },
+          { value: totalCompanies || 0, suffix: '+', label: 'Companies' },
+          { value: totalConnections || 0, suffix: '+', label: 'Connections Made' },
+        ]);
+      }
+    }).catch(() => {});
   }, []);
 
   const features = [
@@ -58,12 +75,7 @@ export default function LandingPage() {
     { icon: FiStar, title: 'Earn Recognition', desc: 'Get likes and appreciation for your hard work.', color: 'text-amber-600', bg: 'bg-amber-50' },
   ];
 
-  const stats = [
-    { value: 500, suffix: '+', label: 'Student Projects' },
-    { value: 200, suffix: '+', label: 'Active Students' },
-    { value: 50, suffix: '+', label: 'Companies' },
-    { value: 1000, suffix: '+', label: 'Connections Made' },
-  ];
+
 
   return (
     <div className="overflow-hidden">

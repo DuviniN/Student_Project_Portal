@@ -23,7 +23,7 @@ const TABS = [
 function OverviewSkeleton() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-pulse">
-      {Array.from({ length: 8 }).map((_, i) => (
+      {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="bg-white rounded-2xl border border-gray-100 h-32" />
       ))}
     </div>
@@ -43,9 +43,6 @@ function OverviewPanel({ stats, loading }) {
     { icon: <FiFolder size={20} />,     label: 'Total Projects',    value: s.totalProjects ?? 0,           accent: 'green',  },
     { icon: <FiTrendingUp size={20} />, label: 'Published',         value: s.totalPublishedProjects ?? 0,  accent: 'blue',   },
     { icon: <FiFolder size={20} />,     label: 'Drafts',            value: s.totalDraftProjects ?? 0,      accent: 'default',},
-    { icon: <FiHeart size={20} />,      label: 'Total Likes',       value: s.totalLikes ?? 0,              accent: 'red',    },
-    { icon: <FiUserPlus size={20} />,   label: 'New This Week',     value: s.newUsersThisWeek ?? 0,        accent: 'green',
-      subtext: `+${s.newUsersToday ?? 0} today` },
   ];
 
   return (
