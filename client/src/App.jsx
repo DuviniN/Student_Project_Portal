@@ -30,7 +30,7 @@ import AdminAuthPage from './pages/admin/AdminAuthPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminUserDetail from './pages/admin/AdminUserDetail';
 import AdminNotifications from './pages/admin/AdminNotifications';
-// Note: admin project editing reuses ProjectFormPage (imported above under student pages)
+
 
 /* ── Shared layout wrapper ───────────────────────────────────── */
 function Layout({ children, hideFooter, hideHeader }) {
