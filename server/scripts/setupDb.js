@@ -119,6 +119,7 @@ const createTables = async () => {
         type         VARCHAR(50) NOT NULL
                        CHECK (type IN ('like', 'follow', 'project_created', 'comment')),
         message      TEXT        NOT NULL,
+        is_private   BOOLEAN     NOT NULL DEFAULT FALSE,
         is_read      BOOLEAN     NOT NULL DEFAULT FALSE,
         read_at      TIMESTAMP,
         created_at   TIMESTAMP   NOT NULL DEFAULT NOW()

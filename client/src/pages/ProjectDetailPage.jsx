@@ -105,9 +105,9 @@ const handleCommentSubmit = async () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="flex flex-col gap-8">
             {/* Main */}
-            <div className="lg:col-span-2">
+            <div>
 
                           
               {/* Tags */}
@@ -121,7 +121,13 @@ const handleCommentSubmit = async () => {
                 </div>
               )}
 
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{project.title}</h1>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{project.title}</h1>
+                <div className="flex items-center gap-4 text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+                  <span className="flex items-center gap-1.5"><FiEye size={16} /> {project.view_count} Views</span>
+                  <span className="flex items-center gap-1.5"><FiHeart size={16} /> {likeCount} Likes</span>
+                </div>
+              </div>
               <p className="text-gray-600 leading-relaxed mb-6">{project.description}</p>
 
               {/* Tech Stack */}
@@ -173,6 +179,26 @@ const handleCommentSubmit = async () => {
                 )}
               </div>
 
+              {/* Author card */}
+              <div className="mt-8 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm w-fit min-w-[250px]">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Author</h3>
+                <Link to={`/profile/${project.user_id}`} className="flex items-center gap-3 group">
+                  {project.author_pic ? (
+                    <img src={project.author_pic} alt={project.author_name} className="w-10 h-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-700 font-bold">
+                      {project.author_name?.[0]}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 group-hover:text-green-600 transition-colors">{project.author_name}</p>
+                    {project.student_id && (
+                      <p className="text-xs text-gray-400">{project.student_id}</p>
+                    )}
+                  </div>
+                </Link>
+              </div>
+
               {/* Comments Section */}
               <div className="mt-10">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -200,7 +226,7 @@ const handleCommentSubmit = async () => {
                         />
                         Make this comment private
                         <span className="text-gray-400">
-                          {isPrivate ? '(only you and admins can see it)' : '(visible to everyone)'}
+                          {isPrivate ? '(only you and the project owner can see it)' : '(visible to everyone)'}
                         </span>
                       </label>
 
@@ -215,7 +241,7 @@ const handleCommentSubmit = async () => {
                   </div>
                 )}
 
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                   {comments.length === 0 ? (
                     <p className="text-gray-500">No comments yet.</p>
                   ) : (
@@ -241,44 +267,6 @@ const handleCommentSubmit = async () => {
                       </div>
                     ))
                   )}
-                </div>
-              </div>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-4">
-              {/* Author card */}
-              <div className="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Author</h3>
-                <Link to={`/profile/${project.user_id}`} className="flex items-center gap-3 group">
-                  {project.author_pic ? (
-                    <img src={project.author_pic} alt={project.author_name} className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-700 font-bold">
-                      {project.author_name?.[0]}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-green-600 transition-colors">{project.author_name}</p>
-                    {project.student_id && (
-                      <p className="text-xs text-gray-400">{project.student_id}</p>
-                    )}
-                  </div>
-                </Link>
-              </div>
-
-              {/* Stats */}
-              <div className="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Stats</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 flex items-center gap-1.5"><FiEye size={14} /> Views</span>
-                    <span className="font-medium text-gray-900">{project.view_count}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 flex items-center gap-1.5"><FiHeart size={14} /> Likes</span>
-                    <span className="font-medium text-gray-900">{likeCount}</span>
-                  </div>
                 </div>
               </div>
             </div>
