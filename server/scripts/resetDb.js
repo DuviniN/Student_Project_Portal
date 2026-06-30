@@ -54,6 +54,7 @@ const resetDb = async () => {
     await client.query(`
       TRUNCATE TABLE
         notifications,
+        comments,
         likes,
         followers,
         project_tags,

@@ -5,6 +5,7 @@ import { FiHeart, FiEye, FiGithub, FiExternalLink, FiArrowLeft } from 'react-ico
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
+import { FiMessageCircle } from 'react-icons/fi';
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
@@ -13,16 +14,62 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [comments, setComments] = useState([]);
+const [commentText, setCommentText] = useState('');
+const [isPrivate, setIsPrivate] = useState(false);
+const [posting, setPosting] = useState(false);
+
+const loadComments = async () => {
+  try {
+    const res = await api.get(`/projects/${id}/comments`);
+    setComments(res.data.comments || []);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   useEffect(() => {
-    api.get(`/projects/${id}`)
-      .then((res) => {
-        setProject(res.data.project);
-        setLikeCount(res.data.project.like_count);
-      })
-      .catch(() => toast.error('Project not found.'))
-      .finally(() => setLoading(false));
-  }, [id]);
+  api.get(`/projects/${id}`)
+    .then((res) => {
+      setProject(res.data.project);
+      setLikeCount(res.data.project.like_count);
+    })
+    .catch(() => toast.error('Project not found.'))
+    .finally(() => setLoading(false));
+
+  loadComments();
+}, [id]);
+
+const handleCommentSubmit = async () => {
+  if (!user) {
+    toast.error('Sign in to comment.');
+    return;
+  }
+
+  if (!commentText.trim()) {
+    toast.error('Comment cannot be empty.');
+    return;
+  }
+
+  try {
+    setPosting(true);
+
+    await api.post(`/projects/${id}/comments`, {
+      content: commentText,
+      is_private: isPrivate,
+    });
+
+    setCommentText('');
+    setIsPrivate(false);
+    loadComments();
+
+    toast.success('Comment added.');
+  } catch (err) {
+    toast.error('Failed to add comment.');
+  } finally {
+    setPosting(false);
+  }
+};
 
   const handleLike = async () => {
     if (!user) { toast.error('Sign in to like projects.'); return; }
@@ -61,6 +108,8 @@ export default function ProjectDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main */}
             <div className="lg:col-span-2">
+
+                          
               {/* Tags */}
               {project.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -122,6 +171,77 @@ export default function ProjectDetailPage() {
                     <FiExternalLink size={16} /> Live Demo
                   </a>
                 )}
+              </div>
+
+              {/* Comments Section */}
+              <div className="mt-10">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <FiMessageCircle />
+                  Comments
+                </h2>
+
+                {user && (
+                  <div className="mb-6">
+                    <textarea
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Write a comment..."
+                      className="w-full border border-gray-200 rounded-xl p-3"
+                      rows={4}
+                    />
+
+                    <div className="flex items-center justify-between mt-3">
+                      <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={isPrivate}
+                          onChange={(e) => setIsPrivate(e.target.checked)}
+                          className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        Make this comment private
+                        <span className="text-gray-400">
+                          {isPrivate ? '(only you and admins can see it)' : '(visible to everyone)'}
+                        </span>
+                      </label>
+
+                      <button
+                        onClick={handleCommentSubmit}
+                        disabled={posting}
+                        className="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium disabled:opacity-60"
+                      >
+                        {posting ? 'Posting...' : 'Post Comment'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {comments.length === 0 ? (
+                    <p className="text-gray-500">No comments yet.</p>
+                  ) : (
+                    comments.map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="bg-white border border-gray-100 rounded-xl p-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">
+                            {comment.author_name}
+                          </p>
+                          {comment.is_private && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100 rounded-full">
+                              Private
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-gray-600 mt-2">
+                          {comment.content}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
 

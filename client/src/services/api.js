@@ -6,18 +6,21 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-let isRefreshing = false;
-let failedQueue = [];
+// Holds the in-flight refresh request (if any) so concurrent 401s share
+// the same refresh call instead of racing each other. Using a shared
+// promise (rather than a boolean flag + queue) avoids the race where two
+// requests both see isRefreshing === false and both trigger a refresh.
+let refreshPromise = null;
 
-const processQueue = (error) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve();
-    }
-  });
-  failedQueue = [];
+const refreshAccessToken = () => {
+  if (!refreshPromise) {
+    refreshPromise = api
+      .post('/auth/refresh')
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
 };
 
 api.interceptors.response.use(
@@ -31,29 +34,12 @@ api.interceptors.response.use(
         return Promise.reject(err);
       }
 
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(() => {
-            return api(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
-        await api.post('/auth/refresh');
-        isRefreshing = false;
-        processQueue(null);
+        await refreshAccessToken();
         return api(originalRequest);
       } catch (refreshError) {
-        isRefreshing = false;
-        processQueue(refreshError);
         window.dispatchEvent(new CustomEvent('auth:expired'));
         return Promise.reject(refreshError);
       }

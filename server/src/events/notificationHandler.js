@@ -46,3 +46,22 @@ emitter.on('UserFollowed', async ({ following, follower }) => {
     console.error('[Event] UserFollowed handler error:', err.message);
   }
 });
+
+// COMMENT_ADDED: notify the project owner (skip if commenting on own project)
+emitter.on('CommentAdded', async ({ comment, project, actor }) => {
+  try {
+    if (actor.id === project.user_id) return; // no self-notification
+
+    const message = `${actor.name} commented on your project "${project.title}".`;
+
+    await pool.query(
+      `INSERT INTO notifications (recipient_id, actor_id, project_id, type, message)
+       VALUES ($1, $2, $3, 'comment', $4)`,
+      [project.user_id, actor.id, project.id, message]
+    );
+
+    console.log(`[Event] CommentAdded notification sent to user ${project.user_id}`);
+  } catch (err) {
+    console.error('[Event] CommentAdded handler error:', err.message);
+  }
+});
