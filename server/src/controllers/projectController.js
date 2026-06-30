@@ -2,28 +2,10 @@ const pool = require('../config/db');
 const cloudinary = require('../config/cloudinary');
 const emitter = require('../events/eventEmitter');
 
-// Automatically ensure the tracking table exists without needing a separate script
-(async () => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS project_views (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-        UNIQUE(user_id, project_id)
-      );
-    `);
-  } catch (err) {
-    console.error('Failed to initialize project_views table:', err.message);
-  }
-})();
-
-
 const getAllProjects = async (req, res) => {
   try {
     const { page = 1, limit = 12, search, tag, status = 'published' } = req.query;
-
+    
     if ((status === 'draft' || status === 'all') && (!req.user || req.user.role !== 'admin')) {
       return res.status(403).json({ success: false, message: `Forbidden: Cannot view ${status} projects` });
     }
@@ -42,14 +24,9 @@ const getAllProjects = async (req, res) => {
       whereClause += ` AND (p.title ILIKE $${params.length} OR p.description ILIKE $${params.length})`;
     }
 
-    const userId = req.user ? req.user.id : null;
-    params.push(userId);
-    const isLikedSelect = `EXISTS(SELECT 1 FROM likes WHERE project_id = p.id AND user_id = $${params.length}) AS is_liked`;
-
     const result = await pool.query(
       `SELECT p.*, u.name AS author_name, u.profile_pic AS author_pic, u.student_id,
               COALESCE(l.like_count, 0)::int AS like_count,
-              ${isLikedSelect},
               ARRAY_REMOVE(ARRAY_AGG(DISTINCT pt.tag), NULL) AS tags
        FROM projects p
        JOIN users u ON p.user_id = u.id
@@ -92,26 +69,11 @@ const getProject = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (req.user) {
-      try {
-        const viewResult = await pool.query(
-          'INSERT INTO project_views (user_id, project_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING id',
-          [req.user.id, id]
-        );
-        
-        if (viewResult.rows.length > 0) {
-          await pool.query('UPDATE projects SET view_count = view_count + 1 WHERE id = $1', [id]);
-        }
-      } catch (err) {
-        console.error('Error tracking project view:', err.message);
-      }
-    }
+    await pool.query('UPDATE projects SET view_count = view_count + 1 WHERE id = $1', [id]);
 
-    const userId = req.user ? req.user.id : null;
     const result = await pool.query(
       `SELECT p.*, u.name AS author_name, u.profile_pic AS author_pic, u.student_id,
               COALESCE(l.like_count, 0)::int AS like_count,
-              EXISTS(SELECT 1 FROM likes WHERE project_id = $1 AND user_id = $2) AS is_liked,
               ARRAY_REMOVE(ARRAY_AGG(DISTINCT pt.tag), NULL) AS tags
        FROM projects p
        JOIN users u ON p.user_id = u.id
@@ -120,7 +82,7 @@ const getProject = async (req, res) => {
        LEFT JOIN project_tags pt ON p.id = pt.project_id
        WHERE p.id = $1
        GROUP BY p.id, u.name, u.profile_pic, u.student_id, l.like_count`,
-      [id, userId]
+      [id]
     );
 
     if (!result.rows.length) {
@@ -323,8 +285,7 @@ const likeProject = async (req, res) => {
 
     if (existing.rows.length) {
       await pool.query('DELETE FROM likes WHERE user_id = $1 AND project_id = $2', [req.user.id, id]);
-      const countResult = await pool.query('SELECT COUNT(*) FROM likes WHERE project_id = $1', [id]);
-      return res.json({ success: true, liked: false, likeCount: parseInt(countResult.rows[0].count, 10), message: 'Like removed.' });
+      return res.json({ success: true, liked: false, message: 'Like removed.' });
     }
 
     await pool.query(
@@ -332,14 +293,12 @@ const likeProject = async (req, res) => {
       [req.user.id, id]
     );
 
-    const countResult = await pool.query('SELECT COUNT(*) FROM likes WHERE project_id = $1', [id]);
-
     emitter.emit('ProjectLiked', {
       project: projectResult.rows[0],
       actor: req.user,
     });
 
-    res.json({ success: true, liked: true, likeCount: parseInt(countResult.rows[0].count, 10), message: 'Project liked.' });
+    res.json({ success: true, liked: true, message: 'Project liked.' });
   } catch (err) {
     console.error('[likeProject]', err.message);
     res.status(500).json({ success: false, message: 'Server error.' });
