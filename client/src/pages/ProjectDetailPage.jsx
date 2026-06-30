@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiHeart, FiEye, FiGithub, FiExternalLink, FiArrowLeft } from 'react-icons/fi';
+import { FiHeart, FiEye, FiGithub, FiExternalLink, FiArrowLeft, FiEdit2, FiEyeOff } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
@@ -33,6 +33,7 @@ const loadComments = async () => {
     .then((res) => {
       setProject(res.data.project);
       setLikeCount(res.data.project.like_count);
+      setLiked(res.data.project.is_liked || false);
     })
     .catch(() => toast.error('Project not found.'))
     .finally(() => setLoading(false));
@@ -76,7 +77,7 @@ const handleCommentSubmit = async () => {
     try {
       const res = await api.post(`/projects/${id}/like`);
       setLiked(res.data.liked);
-      setLikeCount((c) => res.data.liked ? c + 1 : c - 1);
+      setLikeCount(res.data.likeCount);
     } catch {
       toast.error('Could not update like.');
     }
@@ -105,9 +106,9 @@ const handleCommentSubmit = async () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="flex flex-col gap-8">
             {/* Main */}
-            <div className="lg:col-span-2">
+            <div>
 
                           
               {/* Tags */}
@@ -121,44 +122,36 @@ const handleCommentSubmit = async () => {
                 </div>
               )}
 
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{project.title}</h1>
-              <p className="text-gray-600 leading-relaxed mb-6">{project.description}</p>
-
-              {/* Tech Stack */}
-              {project.tech_stack?.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Tech Stack</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {project.tech_stack.map((tech) => (
-                      <span key={tech} className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg border border-blue-100">
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{project.title}</h1>
+                <div className="flex items-center gap-4 text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+                  <span className="flex items-center gap-1.5"><FiEye size={16} /> {project.view_count} Views</span>
+                  <span className="flex items-center gap-1.5"><FiHeart size={16} /> {likeCount} Likes</span>
                 </div>
-              )}
+              </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
                   onClick={handleLike}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                     liked
                       ? 'bg-red-50 text-red-600 border border-red-200'
                       : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
                   }`}
                 >
                   <FiHeart size={16} className={liked ? 'fill-current' : ''} />
-                  {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
+                  <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
                 </button>
                 {project.github_url && (
                   <a
                     href={project.github_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
                   >
-                    <FiGithub size={16} /> GitHub
+                    <FiGithub size={16} />
+                    <span>GitHub</span>
                   </a>
                 )}
                 {project.demo_url && (
@@ -166,11 +159,105 @@ const handleCommentSubmit = async () => {
                     href={project.demo_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm cursor-pointer"
                   >
-                    <FiExternalLink size={16} /> Live Demo
+                    <FiExternalLink size={16} />
+                    <span>Live Demo</span>
                   </a>
                 )}
+                {user?.id === project.user_id && user?.role !== 'admin' && (
+                  <Link
+                    to={`/projects/${project.id}/edit`}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm cursor-pointer"
+                  >
+                    <FiEdit2 size={16} />
+                    <span>Edit Project</span>
+                  </Link>
+                )}
+                {user?.role === 'admin' && (
+                  <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto pt-2 sm:pt-0 sm:border-l sm:border-gray-200 sm:pl-3">
+                    <Link
+                      to={`/admin/projects/${project.id}/edit`}
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm cursor-pointer"
+                    >
+                      <FiEdit2 size={16} />
+                      <span>Edit Project</span>
+                    </Link>
+                    <button
+                      onClick={async () => {
+                        const nextStatus = project.status === 'published' ? 'draft' : 'published';
+                        try {
+                          const formData = new FormData();
+                          formData.append('title', project.title);
+                          formData.append('description', project.description);
+                          formData.append('status', nextStatus);
+                          if (project.github_url) formData.append('github_url', project.github_url);
+                          if (project.demo_url) formData.append('demo_url', project.demo_url);
+                          formData.append('tech_stack', JSON.stringify(project.tech_stack || []));
+                          formData.append('tags', JSON.stringify(project.tags || []));
+
+                          await api.put(`/projects/${project.id}`, formData, { 
+                            headers: { 'Content-Type': 'multipart/form-data' } 
+                          });
+
+                          setProject((p) => ({ ...p, status: nextStatus }));
+                          toast.success(`Project marked as ${nextStatus}`);
+                        } catch {
+                          toast.error('Failed to toggle status');
+                        }
+                      }}
+                      className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm cursor-pointer border ${
+                        project.status === 'published'
+                          ? 'bg-green-100 text-green-800 hover:bg-green-200 border-green-200'
+                          : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200'
+                      }`}
+                    >
+                      {project.status === 'published' ? <FiEye size={16} /> : <FiEyeOff size={16} />}
+                      <span>{project.status === 'published' ? 'Hide from Public' : 'Publish Project'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="text-gray-600 leading-relaxed mb-6">{project.description}</p>
+
+              <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+                <div className="flex-1">
+                  {/* Tech Stack */}
+                  {project.tech_stack?.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-gray-700 mb-3">Tech Stack</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {project.tech_stack.map((tech) => (
+                          <span key={tech} className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg border border-blue-100">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+
+                </div>
+
+                {/* Author card */}
+                <div className="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm w-full md:w-72 flex-shrink-0">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Author</h3>
+                  <Link to={`/profile/${project.user_id}`} className="flex items-center gap-3 group">
+                    {project.author_pic ? (
+                      <img src={project.author_pic} alt={project.author_name} className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-700 font-bold">
+                        {project.author_name?.[0]}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-green-600 transition-colors">{project.author_name}</p>
+                      {project.student_id && (
+                        <p className="text-xs text-gray-400">{project.student_id}</p>
+                      )}
+                    </div>
+                  </Link>
+                </div>
               </div>
 
               {/* Comments Section */}
@@ -200,7 +287,7 @@ const handleCommentSubmit = async () => {
                         />
                         Make this comment private
                         <span className="text-gray-400">
-                          {isPrivate ? '(only you and admins can see it)' : '(visible to everyone)'}
+                          {isPrivate ? '(only you and the project owner can see it)' : '(visible to everyone)'}
                         </span>
                       </label>
 
@@ -215,7 +302,7 @@ const handleCommentSubmit = async () => {
                   </div>
                 )}
 
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                   {comments.length === 0 ? (
                     <p className="text-gray-500">No comments yet.</p>
                   ) : (
@@ -241,44 +328,6 @@ const handleCommentSubmit = async () => {
                       </div>
                     ))
                   )}
-                </div>
-              </div>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-4">
-              {/* Author card */}
-              <div className="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Author</h3>
-                <Link to={`/profile/${project.user_id}`} className="flex items-center gap-3 group">
-                  {project.author_pic ? (
-                    <img src={project.author_pic} alt={project.author_name} className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-700 font-bold">
-                      {project.author_name?.[0]}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-green-600 transition-colors">{project.author_name}</p>
-                    {project.student_id && (
-                      <p className="text-xs text-gray-400">{project.student_id}</p>
-                    )}
-                  </div>
-                </Link>
-              </div>
-
-              {/* Stats */}
-              <div className="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Stats</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 flex items-center gap-1.5"><FiEye size={14} /> Views</span>
-                    <span className="font-medium text-gray-900">{project.view_count}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 flex items-center gap-1.5"><FiHeart size={14} /> Likes</span>
-                    <span className="font-medium text-gray-900">{likeCount}</span>
-                  </div>
                 </div>
               </div>
             </div>
