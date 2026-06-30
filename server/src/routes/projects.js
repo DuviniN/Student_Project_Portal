@@ -11,6 +11,7 @@ const {
   deleteProject,
   likeProject,
 } = require('../controllers/projectController');
+const commentRoutes = require('./comments');
 
 const router = express.Router();
 
@@ -58,5 +59,8 @@ router.post('/:id/like',
   validate,
   likeProject
 );
+
+// Comments — public + private, see commentController for visibility rules
+router.use('/:id/comments', commentRoutes);
 
 module.exports = router;

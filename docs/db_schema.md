@@ -116,7 +116,7 @@ The API toggles (like → unlike) using this constraint.
 Created **only** through the event system (`EventEmitter`), never directly from controllers.  
 `actor_id` is nullable to support future system-generated notifications.  
 `project_id` is nullable because follow notifications are not project-specific.  
-Type `'comment'` is intentionally absent — the comments feature is not implemented.
+`'comment'` notifications are created when a user comments on another user's project (see `comments` table below and `notificationHandler.js`).
 
 ### `session`
 Managed entirely by `connect-pg-simple` / `express-session`.  

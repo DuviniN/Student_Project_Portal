@@ -18,7 +18,7 @@ const createTables = async () => {
     await client.query('BEGIN');
     // Drop existing tables to apply schema changes cleanly
     await run(client, `
-      DROP TABLE IF EXISTS notifications, likes, followers, project_tags, projects, users, "session" CASCADE;
+      DROP TABLE IF EXISTS comments, notifications, likes, followers, project_tags, projects, users, "session" CASCADE;
     `);
 
     // ── USERS ───────────────────────────────────────────────────────────────
@@ -80,6 +80,22 @@ const createTables = async () => {
       );
     `);
 
+    // ── COMMENTS ─────────────────────────────────────────────────────────────
+    // is_private: FALSE = public (visible to everyone, like a YouTube comment),
+    //   TRUE = private (visible only to the comment's author and admins —
+    //   NOT visible to the project owner unless they wrote it themselves)
+    await run(client, `
+      CREATE TABLE IF NOT EXISTS comments (
+        id          SERIAL      PRIMARY KEY,
+        project_id  INTEGER     NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        user_id     INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        content     TEXT        NOT NULL,
+        is_private  BOOLEAN     NOT NULL DEFAULT FALSE,
+        created_at  TIMESTAMP   NOT NULL DEFAULT NOW(),
+        updated_at  TIMESTAMP   NOT NULL DEFAULT NOW()
+      );
+    `);
+
     // ── FOLLOWERS ────────────────────────────────────────────────────────────
     await run(client, `
       CREATE TABLE IF NOT EXISTS followers (
@@ -95,7 +111,6 @@ const createTables = async () => {
     // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
     // actor_id: nullable — system notifications have no actor
     // project_id: nullable — follow notifications have no project
-    // type: 'comment' intentionally omitted — feature not implemented
     await run(client, `
       CREATE TABLE IF NOT EXISTS notifications (
         id           SERIAL      PRIMARY KEY,
@@ -103,8 +118,10 @@ const createTables = async () => {
         actor_id     INTEGER     REFERENCES users(id) ON DELETE SET NULL,
         project_id   INTEGER     REFERENCES projects(id) ON DELETE SET NULL,
         type         VARCHAR(50) NOT NULL
+                       CHECK (type IN ('like', 'follow', 'project_created', 'comment')),
                        CHECK (type IN ('like', 'follow', 'project_created', 'user_registered', 'admin_action', 'admin_edit', 'admin_delete', 'admin_hide')),
         message      TEXT        NOT NULL,
+        is_private   BOOLEAN     NOT NULL DEFAULT FALSE,
         is_read      BOOLEAN     NOT NULL DEFAULT FALSE,
         read_at      TIMESTAMP,
         created_at   TIMESTAMP   NOT NULL DEFAULT NOW()
@@ -142,6 +159,16 @@ const createTables = async () => {
       CREATE INDEX IF NOT EXISTS idx_likes_project_id
         ON likes (project_id);
     `);
+    // comments: fetching a project's comment thread filters by project_id
+    await run(client, `
+      CREATE INDEX IF NOT EXISTS idx_comments_project_id
+        ON comments (project_id);
+    `);
+    // comments: ownership checks (edit/delete, "is this mine?") filter by user_id
+    await run(client, `
+      CREATE INDEX IF NOT EXISTS idx_comments_user_id
+        ON comments (user_id);
+    `);
     // project_tags: join filters by project_id
     await run(client, `
       CREATE INDEX IF NOT EXISTS idx_project_tags_project_id
@@ -169,7 +196,7 @@ const createTables = async () => {
       $$ LANGUAGE plpgsql;
     `);
 
-    for (const table of ['users', 'projects']) {
+    for (const table of ['users', 'projects', 'comments']) {
       await run(client, `
         DROP TRIGGER IF EXISTS trigger_${table}_updated_at ON ${table};
       `);
@@ -182,8 +209,8 @@ const createTables = async () => {
 
     await client.query('COMMIT');
     console.log('All tables created successfully.');
-    console.log('Tables: users, projects, project_tags, likes, followers, notifications, session');
-    console.log('Indexes: status/created, user_id, likes/project, tags/project, notifications/recipient, followers/following');
+    console.log('Tables: users, projects, project_tags, likes, comments, followers, notifications, session');
+    console.log('Indexes: status/created, user_id, likes/project, comments/project, comments/user, tags/project, notifications/recipient, followers/following');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Database setup failed:', err.message);
