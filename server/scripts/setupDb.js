@@ -118,8 +118,7 @@ const createTables = async () => {
         actor_id     INTEGER     REFERENCES users(id) ON DELETE SET NULL,
         project_id   INTEGER     REFERENCES projects(id) ON DELETE SET NULL,
         type         VARCHAR(50) NOT NULL
-                       CHECK (type IN ('like', 'follow', 'project_created', 'comment')),
-                       CHECK (type IN ('like', 'follow', 'project_created', 'user_registered', 'admin_action', 'admin_edit', 'admin_delete', 'admin_hide')),
+                       CHECK (type IN ('like', 'follow', 'project_created', 'comment', 'user_registered', 'admin_action', 'admin_edit', 'admin_delete', 'admin_hide')),
         message      TEXT        NOT NULL,
         is_private   BOOLEAN     NOT NULL DEFAULT FALSE,
         is_read      BOOLEAN     NOT NULL DEFAULT FALSE,
