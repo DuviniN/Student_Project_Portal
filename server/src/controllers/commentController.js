@@ -20,7 +20,6 @@ const getProjectComments = async (req, res) => {
     }
     const projectOwnerId = projectResult.rows[0].user_id;
 
-    const isAdmin = req.user && req.user.role === 'admin';
     const currentUserId = req.user ? req.user.id : null;
 
     const result = await pool.query(
@@ -36,7 +35,6 @@ const getProjectComments = async (req, res) => {
 
     comments = comments.filter(c => {
       if (!c.is_private) return true;
-      if (isAdmin) return true;
       if (currentUserId === c.user_id) return true;
       if (currentUserId === projectOwnerId) return true;
       return false;

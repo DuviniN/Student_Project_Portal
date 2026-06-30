@@ -130,73 +130,77 @@ const handleCommentSubmit = async () => {
               </div>
               <p className="text-gray-600 leading-relaxed mb-6">{project.description}</p>
 
-              {/* Tech Stack */}
-              {project.tech_stack?.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Tech Stack</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {project.tech_stack.map((tech) => (
-                      <span key={tech} className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg border border-blue-100">
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleLike}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    liked
-                      ? 'bg-red-50 text-red-600 border border-red-200'
-                      : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
-                  }`}
-                >
-                  <FiHeart size={16} className={liked ? 'fill-current' : ''} />
-                  {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
-                </button>
-                {project.github_url && (
-                  <a
-                    href={project.github_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors"
-                  >
-                    <FiGithub size={16} /> GitHub
-                  </a>
-                )}
-                {project.demo_url && (
-                  <a
-                    href={project.demo_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
-                  >
-                    <FiExternalLink size={16} /> Live Demo
-                  </a>
-                )}
-              </div>
-
-              {/* Author card */}
-              <div className="mt-8 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm w-fit min-w-[250px]">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Author</h3>
-                <Link to={`/profile/${project.user_id}`} className="flex items-center gap-3 group">
-                  {project.author_pic ? (
-                    <img src={project.author_pic} alt={project.author_name} className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-700 font-bold">
-                      {project.author_name?.[0]}
+              <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+                <div className="flex-1">
+                  {/* Tech Stack */}
+                  {project.tech_stack?.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-gray-700 mb-3">Tech Stack</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {project.tech_stack.map((tech) => (
+                          <span key={tech} className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg border border-blue-100">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-green-600 transition-colors">{project.author_name}</p>
-                    {project.student_id && (
-                      <p className="text-xs text-gray-400">{project.student_id}</p>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <button
+                      onClick={handleLike}
+                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        liked
+                          ? 'bg-red-50 text-red-600 border border-red-200'
+                          : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                      }`}
+                    >
+                      <FiHeart size={16} className={liked ? 'fill-current' : ''} />
+                      {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
+                    </button>
+                    {project.github_url && (
+                      <a
+                        href={project.github_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+                      >
+                        <FiGithub size={16} /> GitHub
+                      </a>
+                    )}
+                    {project.demo_url && (
+                      <a
+                        href={project.demo_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
+                      >
+                        <FiExternalLink size={16} /> Live Demo
+                      </a>
                     )}
                   </div>
-                </Link>
+                </div>
+
+                {/* Author card */}
+                <div className="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm w-full md:w-72 flex-shrink-0">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Author</h3>
+                  <Link to={`/profile/${project.user_id}`} className="flex items-center gap-3 group">
+                    {project.author_pic ? (
+                      <img src={project.author_pic} alt={project.author_name} className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-700 font-bold">
+                        {project.author_name?.[0]}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-green-600 transition-colors">{project.author_name}</p>
+                      {project.student_id && (
+                        <p className="text-xs text-gray-400">{project.student_id}</p>
+                      )}
+                    </div>
+                  </Link>
+                </div>
               </div>
 
               {/* Comments Section */}
