@@ -2,12 +2,28 @@ const pool = require('../config/db');
 const cloudinary = require('../config/cloudinary');
 const emitter = require('../events/eventEmitter');
 
-const viewedProjects = new Set();
+// Automatically ensure the tracking table exists without needing a separate script
+(async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS project_views (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        UNIQUE(user_id, project_id)
+      );
+    `);
+  } catch (err) {
+    console.error('Failed to initialize project_views table:', err.message);
+  }
+})();
+
 
 const getAllProjects = async (req, res) => {
   try {
     const { page = 1, limit = 12, search, tag, status = 'published' } = req.query;
-    
+
     if ((status === 'draft' || status === 'all') && (!req.user || req.user.role !== 'admin')) {
       return res.status(403).json({ success: false, message: `Forbidden: Cannot view ${status} projects` });
     }
@@ -72,10 +88,17 @@ const getProject = async (req, res) => {
     const { id } = req.params;
 
     if (req.user) {
-      const viewKey = `${req.user.id}-${id}`;
-      if (!viewedProjects.has(viewKey)) {
-        await pool.query('UPDATE projects SET view_count = view_count + 1 WHERE id = $1', [id]);
-        viewedProjects.add(viewKey);
+      try {
+        const viewResult = await pool.query(
+          'INSERT INTO project_views (user_id, project_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING id',
+          [req.user.id, id]
+        );
+        
+        if (viewResult.rows.length > 0) {
+          await pool.query('UPDATE projects SET view_count = view_count + 1 WHERE id = $1', [id]);
+        }
+      } catch (err) {
+        console.error('Error tracking project view:', err.message);
       }
     }
 
