@@ -42,9 +42,14 @@ const getAllProjects = async (req, res) => {
       whereClause += ` AND (p.title ILIKE $${params.length} OR p.description ILIKE $${params.length})`;
     }
 
+    const userId = req.user ? req.user.id : null;
+    params.push(userId);
+    const isLikedSelect = `EXISTS(SELECT 1 FROM likes WHERE project_id = p.id AND user_id = $${params.length}) AS is_liked`;
+
     const result = await pool.query(
       `SELECT p.*, u.name AS author_name, u.profile_pic AS author_pic, u.student_id,
               COALESCE(l.like_count, 0)::int AS like_count,
+              ${isLikedSelect},
               ARRAY_REMOVE(ARRAY_AGG(DISTINCT pt.tag), NULL) AS tags
        FROM projects p
        JOIN users u ON p.user_id = u.id
@@ -102,9 +107,11 @@ const getProject = async (req, res) => {
       }
     }
 
+    const userId = req.user ? req.user.id : null;
     const result = await pool.query(
       `SELECT p.*, u.name AS author_name, u.profile_pic AS author_pic, u.student_id,
               COALESCE(l.like_count, 0)::int AS like_count,
+              EXISTS(SELECT 1 FROM likes WHERE project_id = $1 AND user_id = $2) AS is_liked,
               ARRAY_REMOVE(ARRAY_AGG(DISTINCT pt.tag), NULL) AS tags
        FROM projects p
        JOIN users u ON p.user_id = u.id
@@ -113,7 +120,7 @@ const getProject = async (req, res) => {
        LEFT JOIN project_tags pt ON p.id = pt.project_id
        WHERE p.id = $1
        GROUP BY p.id, u.name, u.profile_pic, u.student_id, l.like_count`,
-      [id]
+      [id, userId]
     );
 
     if (!result.rows.length) {
@@ -316,7 +323,8 @@ const likeProject = async (req, res) => {
 
     if (existing.rows.length) {
       await pool.query('DELETE FROM likes WHERE user_id = $1 AND project_id = $2', [req.user.id, id]);
-      return res.json({ success: true, liked: false, message: 'Like removed.' });
+      const countResult = await pool.query('SELECT COUNT(*) FROM likes WHERE project_id = $1', [id]);
+      return res.json({ success: true, liked: false, likeCount: parseInt(countResult.rows[0].count, 10), message: 'Like removed.' });
     }
 
     await pool.query(
@@ -324,12 +332,14 @@ const likeProject = async (req, res) => {
       [req.user.id, id]
     );
 
+    const countResult = await pool.query('SELECT COUNT(*) FROM likes WHERE project_id = $1', [id]);
+
     emitter.emit('ProjectLiked', {
       project: projectResult.rows[0],
       actor: req.user,
     });
 
-    res.json({ success: true, liked: true, message: 'Project liked.' });
+    res.json({ success: true, liked: true, likeCount: parseInt(countResult.rows[0].count, 10), message: 'Project liked.' });
   } catch (err) {
     console.error('[likeProject]', err.message);
     res.status(500).json({ success: false, message: 'Server error.' });
