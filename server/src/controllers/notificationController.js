@@ -3,7 +3,8 @@ const pool = require('../config/db');
 const getNotifications = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT n.*, u.name AS actor_name, u.profile_pic AS actor_pic
+      `SELECT n.*, u.name AS actor_name, u.profile_pic AS actor_pic,
+              EXISTS(SELECT 1 FROM followers f WHERE f.follower_id = $1 AND f.following_id = n.actor_id) AS is_following
        FROM notifications n
        LEFT JOIN users u ON n.actor_id = u.id
        WHERE n.recipient_id = $1

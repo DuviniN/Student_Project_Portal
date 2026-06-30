@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiUsers, FiFolder, FiUserPlus, FiUserCheck } from 'react-icons/fi';
+import { FiUsers, FiFolder, FiUserPlus, FiUserCheck, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
@@ -14,6 +14,11 @@ export default function StudentProfilePage() {
   const [projects, setProjects] = useState([]);
   const [following, setFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalUsers, setModalUsers] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -41,6 +46,22 @@ export default function StudentProfilePage() {
       toast.error('Could not update follow.');
     }
   };
+
+  const openFollowModal = async (type) => {
+    setModalOpen(true);
+    setModalTitle(type === 'followers' ? 'Followers' : 'Following');
+    setModalLoading(true);
+    try {
+      const res = await api.get(`/users/${id}/${type}`);
+      setModalUsers(res.data[type]);
+    } catch {
+      toast.error(`Could not load ${type}.`);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -76,9 +97,12 @@ export default function StudentProfilePage() {
               <span className="flex items-center gap-1.5">
                 <FiFolder size={14} /> {profile.project_count} projects
               </span>
-              <span className="flex items-center gap-1.5">
+              <button 
+                onClick={() => openFollowModal('followers')}
+                className="flex items-center gap-1.5 hover:text-green-600 transition-colors"
+              >
                 <FiUsers size={14} /> {profile.follower_count} followers
-              </span>
+              </button>
             </div>
           </div>
           {user && user.id !== parseInt(id, 10) && (
@@ -107,6 +131,55 @@ export default function StudentProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <h3 className="font-bold text-gray-900">{modalTitle}</h3>
+              <button onClick={() => setModalOpen(false)} className="p-1 text-gray-400 hover:text-gray-600">
+                <FiX size={20} />
+              </button>
+            </div>
+            <div className="p-4 max-h-[60vh] overflow-y-auto">
+              {modalLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : modalUsers.length > 0 ? (
+                <div className="space-y-4">
+                  {modalUsers.map(u => (
+                    <div key={u.id} className="flex items-center gap-3">
+                      <Link to={`/profile/${u.id}`} onClick={() => setModalOpen(false)}>
+                        {u.profile_pic ? (
+                          <img src={u.profile_pic} alt={u.name} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
+                            {u.name?.[0]}
+                          </div>
+                        )}
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <Link to={`/profile/${u.id}`} onClick={() => setModalOpen(false)} className="font-semibold text-sm text-gray-900 hover:underline truncate block">
+                          {u.name}
+                        </Link>
+                        <p className="text-xs text-gray-500 capitalize">{u.role}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-sm text-gray-500 py-4">No users found.</p>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

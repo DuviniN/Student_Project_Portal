@@ -116,4 +116,42 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-module.exports = { getUserProfile, getUserProjects, followUser, getAllUsers };
+const getFollowers = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.user ? req.user.id : null;
+    const result = await pool.query(
+      `SELECT u.id, u.name, u.role, u.profile_pic,
+              EXISTS(SELECT 1 FROM followers f2 WHERE f2.follower_id = $2 AND f2.following_id = u.id) AS is_following
+       FROM users u
+       JOIN followers f ON u.id = f.follower_id
+       WHERE f.following_id = $1`,
+      [id, currentUserId]
+    );
+    res.json({ success: true, followers: result.rows });
+  } catch (err) {
+    console.error('[getFollowers]', err.message);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const getFollowing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.user ? req.user.id : null;
+    const result = await pool.query(
+      `SELECT u.id, u.name, u.role, u.profile_pic,
+              EXISTS(SELECT 1 FROM followers f2 WHERE f2.follower_id = $2 AND f2.following_id = u.id) AS is_following
+       FROM users u
+       JOIN followers f ON u.id = f.following_id
+       WHERE f.follower_id = $1`,
+      [id, currentUserId]
+    );
+    res.json({ success: true, following: result.rows });
+  } catch (err) {
+    console.error('[getFollowing]', err.message);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+module.exports = { getUserProfile, getUserProjects, followUser, getAllUsers, getFollowers, getFollowing };
