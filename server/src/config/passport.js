@@ -48,6 +48,11 @@ passport.use(
             return done(null, false, { message: 'This Google account is not registered as an admin.' });
           }
 
+          // Prevent admins from logging in through normal flows
+          if (user.role === 'admin' && state !== 'admin') {
+            return done(null, false, { message: 'Admins must log in through the admin portal.' });
+          }
+
           // Blocked user check
           if (user.is_blocked) {
             return done(null, false, { message: 'Your account has been suspended.' });

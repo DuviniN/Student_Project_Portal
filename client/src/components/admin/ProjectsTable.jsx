@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiSearch, FiTrash2, FiExternalLink, FiCode, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiSearch, FiTrash2, FiExternalLink, FiCode, FiEdit2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import useDebounce from '../../hooks/useDebounce';
@@ -75,19 +75,6 @@ export default function ProjectsTable() {
     }
   };
 
-  // Toggle Visibility
-  const handleToggleVisibility = async (project) => {
-    const newStatus = project.status === 'published' ? 'draft' : 'published';
-    try {
-      await api.patch(`/admin/projects/${project.id}`, { status: newStatus });
-      setProjects((prev) =>
-        prev.map((p) => (p.id === project.id ? { ...p, status: newStatus } : p))
-      );
-      toast.success(`Project marked as ${newStatus}.`);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update status.');
-    }
-  };
 
   // ── Column definitions ───────────────────────────────────────
   const columns = [
@@ -141,16 +128,7 @@ export default function ProjectsTable() {
           >
             <FiEdit2 size={15} />
           </Link>
-          <button
-            onClick={() => handleToggleVisibility(p)}
-            title={p.status === 'published' ? 'Hide from public' : 'Publish project'}
-            className={`p-2 rounded-lg transition-colors ${p.status === 'published'
-                ? 'text-amber-600 hover:bg-amber-50'
-                : 'text-green-600 hover:bg-green-50'
-              }`}
-          >
-            {p.status === 'published' ? <FiEyeOff size={15} /> : <FiEye size={15} />}
-          </button>
+
           <button
             onClick={() => handleDelete(p)}
             title="Delete"

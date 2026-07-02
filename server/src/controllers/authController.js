@@ -221,6 +221,10 @@ const loginLocal = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Your account has been suspended.' });
     }
 
+    if (user.role === 'admin') {
+      return res.status(403).json({ success: false, message: 'Admins must log in through the admin portal.' });
+    }
+
     const token = signToken(user.id);
     const refreshToken = signRefreshToken(user.id);
     setTokenCookies(res, token, refreshToken);
