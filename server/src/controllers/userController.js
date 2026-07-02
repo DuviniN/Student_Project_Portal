@@ -22,7 +22,14 @@ const getUserProfile = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
 
-    res.json({ success: true, user: result.rows[0] });
+    const userProfile = result.rows[0];
+    const isOwnerOrAdmin = req.user && (req.user.id === parseInt(id, 10) || req.user.role === 'admin');
+    
+    if (!isOwnerOrAdmin) {
+      delete userProfile.email;
+    }
+
+    res.json({ success: true, user: userProfile });
   } catch (err) {
     console.error('[getUserProfile]', err.message);
     res.status(500).json({ success: false, message: 'Server error.' });

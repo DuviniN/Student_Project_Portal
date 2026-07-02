@@ -58,12 +58,9 @@ passport.use(
             return done(null, false, { message: 'Your account has been suspended.' });
           }
 
-          // Link Google ID to an existing email/password account (first Google login)
+          // Prevent silent account takeover: do not auto-link Google to an unverified local account
           if (!user.google_id) {
-            await pool.query(
-              'UPDATE users SET google_id = $1, profile_pic = COALESCE($2, profile_pic), updated_at = NOW() WHERE id = $3',
-              [googleId, profilePic, user.id]
-            );
+            return done(null, false, { message: 'An account with this email already exists. Please log in with your password.' });
           } else {
             // Refresh profile pic
             await pool.query(

@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME}`,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED === 'false' ? false : true }
 });
 
 const bcrypt = require('bcryptjs');
@@ -44,5 +44,13 @@ async function addAdmin(email, rawPassword) {
   }
 }
 
-// Change the email and password here if you want!
-addAdmin('larmora.admin@gmail.com', 'Admin123!');
+const email = process.argv[2] || process.env.ADMIN_EMAIL;
+const password = process.argv[3] || process.env.ADMIN_PASSWORD;
+
+if (!email || !password) {
+  console.error('Usage: node create_admin.js <email> <password>');
+  console.error('Or set ADMIN_EMAIL and ADMIN_PASSWORD environment variables.');
+  process.exit(1);
+}
+
+addAdmin(email, password);
