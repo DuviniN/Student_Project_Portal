@@ -48,17 +48,19 @@ passport.use(
             return done(null, false, { message: 'This Google account is not registered as an admin.' });
           }
 
+          // Prevent admins from logging in through normal flows
+          if (user.role === 'admin' && state !== 'admin') {
+            return done(null, false, { message: 'Admins must log in through the admin portal.' });
+          }
+
           // Blocked user check
           if (user.is_blocked) {
             return done(null, false, { message: 'Your account has been suspended.' });
           }
 
-          // Link Google ID to an existing email/password account (first Google login)
+          // Prevent silent account takeover: do not auto-link Google to an unverified local account
           if (!user.google_id) {
-            await pool.query(
-              'UPDATE users SET google_id = $1, profile_pic = COALESCE($2, profile_pic), updated_at = NOW() WHERE id = $3',
-              [googleId, profilePic, user.id]
-            );
+            return done(null, false, { message: 'An account with this email already exists. Please log in with your password.' });
           } else {
             // Refresh profile pic
             await pool.query(
