@@ -1,15 +1,15 @@
+require('node:dns').setDefaultResultOrder('ipv4first');
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME}`,
+  ssl: { rejectUnauthorized: false }
 });
 
-async function addAdmin() {
+const bcrypt = require('bcryptjs');
+
+async function addAdmin(email, rawPassword) {
   const query = `
     INSERT INTO users (name, email, role, admin_verified, password) 
     VALUES ($1, $2, $3, $4, $5)
@@ -19,17 +19,24 @@ async function addAdmin() {
         admin_verified = EXCLUDED.admin_verified,
         name = EXCLUDED.name;
   `;
-  const values = [
-    'admin',
-    'admin@gmail.com',
-    'admin',
-    true,
-    '$2b$10$aPfWylZmlr2kYu9AlwelvO9I7S0Y84wQrWbd5YQjWeML0o/o9BtLG'
-  ];
-  // chanage hash as you need 
+
   try {
-    const res = await pool.query(query, values);
-    console.log('Admin user inserted/updated successfully.');
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(rawPassword, salt);
+
+    const values = [
+      'Admin User', // name
+      email,
+      'admin',      // role
+      true,         // admin_verified
+      hashedPassword
+    ];
+    
+    await pool.query(query, values);
+    console.log(`✅ Admin user '${email}' inserted/updated successfully in Neon Database!`);
+    console.log(`🔑 You can now login locally using:`);
+    console.log(`   Email: ${email}`);
+    console.log(`   Password: ${rawPassword}`);
   } catch (err) {
     console.error('Error executing query:', err);
   } finally {
@@ -37,4 +44,5 @@ async function addAdmin() {
   }
 }
 
-addAdmin();
+// Change the email and password here if you want!
+addAdmin('larmora.admin@gmail.com', 'Admin123!');

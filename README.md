@@ -5,6 +5,99 @@ Students can publish their projects, companies can discover talent, and admins c
 
 ---
 
+## Architecture
+
+```mermaid
+graph TD
+    %% User Interaction
+    User((User / Browser)) -->|Interacts| ClientApp
+
+    %% Frontend Layer
+    subgraph Frontend [Client - React / Vite]
+        ClientApp[React Components / Pages]
+        StateStore[Zustand State Management]
+        Axios[Axios API Client]
+        ClientApp <--> StateStore
+        ClientApp <--> Axios
+    end
+
+    %% Backend Layer
+    subgraph Backend [Server - Node.js / Express]
+        Router(Express Router)
+        AuthMiddleware[Passport.js / Auth Middleware]
+        UploadMiddleware[Multer Memory Storage]
+        Controllers[API Controllers]
+        EventEmitter[Node EventEmitter]
+        
+        Router --> AuthMiddleware
+        Router --> UploadMiddleware
+        Router --> Controllers
+        Controllers -.->|Emits async events| EventEmitter
+    end
+
+    %% Database Layer
+    subgraph DB [Database Layer]
+        Postgres[(PostgreSQL)]
+        SessionStore[(connect-pg-simple Session Store)]
+    end
+
+    %% External Services
+    subgraph External [External Services]
+        Google[Google OAuth 2.0 API]
+        Cloudinary[Cloudinary Storage / CDN]
+    end
+
+    %% Connections across layers
+    Axios <-->|REST API JSON \n HTTP/Cookies| Router
+    
+    AuthMiddleware <-->|OAuth Flow| Google
+    AuthMiddleware <-->|Manage Sessions| SessionStore
+    AuthMiddleware <-->|Verify/Create Users| Postgres
+
+    UploadMiddleware -->|Passes req.file.buffer| Controllers
+    Controllers -->|Pipes Image Buffer| Cloudinary
+    Cloudinary -.->|Returns Secure Image URL| Controllers
+
+    Controllers <-->|CRUD Operations\nProjects, Users, Comments| Postgres
+    EventEmitter -->|Async writes notifications| Postgres
+    
+    %% Styling
+    classDef frontend fill:#e1f5fe,stroke:#03a9f4,stroke-width:2px,color:#000000;
+    classDef backend fill:#e8f5e9,stroke:#4caf50,stroke-width:2px,color:#000000;
+    classDef database fill:#fff3e0,stroke:#ff9800,stroke-width:2px,color:#000000;
+    classDef external fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px,color:#000000;
+    
+    class ClientApp,StateStore,Axios frontend;
+    class Router,AuthMiddleware,UploadMiddleware,Controllers,EventEmitter backend;
+    class Postgres,SessionStore database;
+    class Google,Cloudinary external;
+```
+
+---
+
+### Architecture Breakdown
+
+1. **Frontend (Client)**
+   - Built with **React 18** and **Vite**.
+   - Uses **Zustand** for centralized, lightweight state management (e.g., authentication context).
+   - Uses **Axios** to communicate with the backend, automatically sending `HTTP-only` cookies for session/authentication management.
+
+2. **Backend (Server)**
+   - A **Node.js** and **Express 5** application.
+   - **Passport.js** manages the authentication flow with Google OAuth.
+   - **Multer** acts as middleware to intercept file uploads, storing them temporarily in memory.
+   - The **EventEmitter** asynchronously handles events (like a user registering or a project being liked) and writes them to the notifications table without blocking the main request/response cycle.
+
+3. **Database**
+   - **PostgreSQL**: Stores all application data (`users`, `projects`, `comments`, `likes`, `notifications`).
+   - Also utilized by `connect-pg-simple` to securely store and manage Express session data.
+
+4. **External Services**
+   - **Google OAuth 2.0**: Handles the Single Sign-On (SSO) login flow.
+   - **Cloudinary**: Directly receives image streams from the backend memory, hosts the images, and acts as a CDN, returning a secure URL to the backend to store in the database.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
